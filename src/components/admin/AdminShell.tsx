@@ -30,6 +30,7 @@ const MENU: { href: string; label: string; peran: Peran[] | null }[] = [
   { href: "/admin/agenda", label: "Agenda", peran: ["sekretaris"] },
   { href: "/admin/galeri", label: "Galeri", peran: ["sekretaris"] },
   { href: "/admin/anggota", label: "Anggota", peran: ["sekretaris", "bendahara"] },
+  { href: "/admin/pengurus", label: "Pengurus", peran: ["sekretaris"] },
   { href: "/admin/kas", label: "Kas", peran: ["bendahara"] },
   { href: "/admin/iuran", label: "Iuran", peran: ["bendahara"] },
   { href: "/admin/laporan", label: "Laporan", peran: ["sekretaris", "bendahara"] },

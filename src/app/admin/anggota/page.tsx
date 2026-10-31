@@ -5,6 +5,7 @@ import { useAdmin } from "@/components/admin/AdminShell";
 import { Halaman, Notif, type Pesan } from "@/components/admin/ui";
 import { bisa, hapusFoto, pesanError, unggahFoto } from "@/lib/admin-util";
 import { inisial, tanggal } from "@/lib/format";
+import { bacaUsername } from "@/lib/medsos";
 
 type Anggota = {
   id: string;
@@ -16,6 +17,11 @@ type Anggota = {
   no_hp: string | null;
   alamat: string | null;
   catatan: string | null;
+  bio: string | null;
+  prestasi: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  tampil_medsos: boolean;
   tampil_publik: boolean;
   aktif: boolean;
 };
@@ -31,6 +37,11 @@ type Form = {
   no_hp: string;
   alamat: string;
   catatan: string;
+  bio: string;
+  prestasi: string;
+  instagram: string;
+  tiktok: string;
+  tampil_medsos: boolean;
   tampil_publik: boolean;
   aktif: boolean;
 };
@@ -45,6 +56,11 @@ const kosong = (): Form => ({
   no_hp: "",
   alamat: "",
   catatan: "",
+  bio: "",
+  prestasi: "",
+  instagram: "",
+  tiktok: "",
+  tampil_medsos: false,
   tampil_publik: true,
   aktif: true,
 });
@@ -54,7 +70,7 @@ export default function AdminAnggota() {
     <Halaman
       judul="Anggota"
       peran={["sekretaris", "bendahara"]}
-      deskripsi="Data anggota. Hanya nama, tempat tanggal lahir, dan foto yang tampil di website. Nomor HP, alamat, dan catatan hanya terlihat oleh pengurus."
+      deskripsi="Data anggota. Yang tampil di website: nama, tempat tanggal lahir, foto, bio, prestasi, dan (kalau dinyalakan) Instagram dan TikTok. Nomor HP, alamat, dan catatan hanya terlihat oleh pengurus."
     >
       <Isi />
     </Halaman>
@@ -75,7 +91,7 @@ function Isi() {
   const muat = useCallback(async () => {
     const { data, error } = await db
       .from("members")
-      .select("id,nama,jenis,tempat_lahir,tanggal_lahir,foto_url,no_hp,alamat,catatan,tampil_publik,aktif")
+      .select("id,nama,jenis,tempat_lahir,tanggal_lahir,foto_url,no_hp,alamat,catatan,bio,prestasi,instagram,tiktok,tampil_medsos,tampil_publik,aktif")
       .order("nama");
     if (error) setPesan({ t: "err", teks: pesanError(error) });
     else setDaftar((data ?? []) as Anggota[]);
@@ -110,6 +126,11 @@ function Isi() {
       no_hp: a.no_hp ?? "",
       alamat: a.alamat ?? "",
       catatan: a.catatan ?? "",
+      bio: a.bio ?? "",
+      prestasi: a.prestasi ?? "",
+      instagram: a.instagram ?? "",
+      tiktok: a.tiktok ?? "",
+      tampil_medsos: a.tampil_medsos,
       tampil_publik: a.tampil_publik,
       aktif: a.aktif,
     });
@@ -145,6 +166,11 @@ function Isi() {
         no_hp: form.no_hp.trim() || null,
         alamat: form.alamat.trim() || null,
         catatan: form.catatan.trim() || null,
+        bio: form.bio.trim() || null,
+        prestasi: form.prestasi.trim() || null,
+        instagram: bacaUsername(form.instagram, "instagram"),
+        tiktok: bacaUsername(form.tiktok, "tiktok"),
+        tampil_medsos: form.tampil_medsos,
         tampil_publik: form.tampil_publik,
         aktif: form.aktif,
       };
@@ -241,6 +267,36 @@ function Isi() {
             <label htmlFor="catatan">Catatan (hanya pengurus)</label>
             <input id="catatan" maxLength={200} value={form.catatan} onChange={(e) => ubah("catatan", e.target.value)} />
           </div>
+
+          <h3 className="adm-sub">Profil di website (kartu detail anggota)</h3>
+          <div className="adm-field">
+            <label htmlFor="bio">Bio singkat</label>
+            <textarea id="bio" rows={3} maxLength={400} style={{ minHeight: 90 }} value={form.bio} onChange={(e) => ubah("bio", e.target.value)} />
+            <span className="adm-bantu">Dua atau tiga kalimat saja. Tampil di website.</span>
+          </div>
+          <div className="adm-field">
+            <label htmlFor="prestasi">Prestasi dan kegiatan</label>
+            <textarea id="prestasi" rows={4} maxLength={1000} style={{ minHeight: 110 }} value={form.prestasi} onChange={(e) => ubah("prestasi", e.target.value)} />
+            <span className="adm-bantu">Satu poin per baris. Contoh: Juara 1 lomba hadroh tingkat kecamatan 2025</span>
+          </div>
+          <div className="adm-baris">
+            <div className="adm-field">
+              <label htmlFor="ig">Instagram</label>
+              <input id="ig" maxLength={120} placeholder="@username" value={form.instagram} onChange={(e) => ubah("instagram", e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label htmlFor="tt">TikTok</label>
+              <input id="tt" maxLength={120} placeholder="@username" value={form.tiktok} onChange={(e) => ubah("tiktok", e.target.value)} />
+            </div>
+          </div>
+          <label className="adm-centang">
+            <input type="checkbox" checked={form.tampil_medsos} onChange={(e) => ubah("tampil_medsos", e.target.checked)} />
+            Tampilkan Instagram dan TikTok di website
+          </label>
+          <span className="adm-bantu">
+            Nyalakan hanya kalau anggota sudah setuju (dan orang tuanya, kalau masih di bawah umur). Kalau mati, medsos tidak
+            tampil sama sekali.
+          </span>
 
           <div className="adm-aksi">
             <label className="adm-centang">

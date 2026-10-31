@@ -6,9 +6,10 @@ Database dan aturan aksesnya ada di `supabase/schema.sql` dan `supabase/tambahan
 
 Dibuat dengan Next.js, Supabase (database, login, foto), dan di-hosting di Vercel.
 
-> **Catatan:** kode ini belum pernah di-build karena tempat saya menulisnya tidak bisa
-> mengunduh paket. Langkah 1 di bawah adalah ujian pertamanya. Kalau ada error,
-> salin pesannya dan kita perbaiki.
+> **Catatan:** kode ini sudah diuji `npm install` dan `npm run build` (lolos) dalam mode demo.
+> Bagian yang belum teruji adalah sambungan ke Supabase asli (login admin, unggah foto),
+> karena itu baru bisa dicek setelah langkah 2 dan 3 di bawah. Kalau ada error, salin
+> pesannya dan kita perbaiki.
 
 ## 1. Coba di komputer (mode demo)
 
@@ -98,4 +99,6 @@ src/app/publik.css   tampilan website publik (tema gelap), ubah warna di blok .t
 src/app/globals.css  gaya dasar bersama yang juga dipakai panel admin, jangan hapus variabel di :root
 public/              logo-ipnu.png dan logo-ippnu.png (ganti berkasnya untuk mengganti logo)
 supabase/schema.sql  tabel, aturan akses, penyimpanan foto
+supabase/tambahan-admin.sql  fungsi iuran (jalankan setelah schema.sql)
+supabase/tambahan-profil-pengurus.sql  bio, prestasi, medsos anggota, dan struktur pengurus (jalankan setelah tambahan-admin.sql)
 ```

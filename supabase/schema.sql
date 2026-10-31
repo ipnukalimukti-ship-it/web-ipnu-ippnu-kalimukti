@@ -184,7 +184,7 @@ alter table public.iuran_pembayaran enable row level security;
 
 -- Profil: pengguna membaca profil sendiri; hanya admin yang mengelola.
 create policy "profil: baca sendiri" on public.profiles
-  for select to authenticated using (id = auth.uid() or public.punya_peran());
+  for select to authenticated using (id = auth.uid());
 create policy "profil: admin kelola" on public.profiles
   for all to authenticated
   using (public.peran() = 'admin') with check (public.peran() = 'admin');

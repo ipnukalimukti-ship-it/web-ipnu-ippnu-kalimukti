@@ -5,7 +5,7 @@
 //   tidak pernah tampil di website yang sudah live).
 import { getSupabase } from "./supabase";
 import * as sample from "./sample";
-import type { Album, EventItem, KasSummary, Member, News } from "./types";
+import type { Album, EventItem, KasSummary, Member, News, Pengurus } from "./types";
 
 function check(res: { data: unknown; error: { message: string } | null }): unknown {
   if (res.error) throw new Error(res.error.message);
@@ -30,11 +30,23 @@ export async function getMembers(opts: { jenis?: string; q?: string } = {}): Pro
 
   let query = db
     .from("members_public")
-    .select("id,nama,tempat_lahir,tanggal_lahir,jenis,foto_url")
+    .select("id,nama,tempat_lahir,tanggal_lahir,jenis,foto_url,bio,prestasi,instagram,tiktok")
     .order("nama");
   if (jenis) query = query.eq("jenis", jenis);
   if (q) query = query.ilike("nama", `%${q}%`);
   return (check(await query) as Member[] | null) ?? [];
+}
+
+export async function getPengurus(): Promise<Pengurus[]> {
+  const db = getSupabase();
+  if (!db) return sample.pengurus;
+
+  const res = await db
+    .from("pengurus")
+    .select("id,nama,jabatan,bagian,jenis,foto_url,urutan")
+    .order("urutan", { ascending: true })
+    .order("nama", { ascending: true });
+  return (check(res) as Pengurus[] | null) ?? [];
 }
 
 export async function getNews(limit = 20): Promise<News[]> {

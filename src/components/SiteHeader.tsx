@@ -8,6 +8,7 @@ import { LogoIpnu, LogoIppnu } from "./Logo";
 const items = [
   { href: "/", label: "Beranda" },
   { href: "/berita", label: "Berita" },
+  { href: "/pengurus", label: "Pengurus" },
   { href: "/anggota", label: "Anggota" },
   { href: "/kas", label: "Kas" },
   { href: "/agenda", label: "Agenda" },

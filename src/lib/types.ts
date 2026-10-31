@@ -7,6 +7,20 @@ export type Member = {
   tanggal_lahir: string | null; // format YYYY-MM-DD
   jenis: Jenis;
   foto_url: string | null;
+  bio: string | null;
+  prestasi: string | null; // satu poin per baris
+  instagram: string | null; // username saja; null kalau medsos tidak ditampilkan
+  tiktok: string | null;
+};
+
+export type Pengurus = {
+  id: string;
+  nama: string;
+  jabatan: string;
+  bagian: string;
+  jenis: Jenis;
+  foto_url: string | null;
+  urutan: number;
 };
 
 export type News = {

@@ -29,6 +29,7 @@ export default function PublikLayout({ children }: { children: React.ReactNode }
             </div>
             <ul className="px-footer-nav">
               <li><Link href="/berita">Berita</Link></li>
+              <li><Link href="/pengurus">Pengurus</Link></li>
               <li><Link href="/anggota">Anggota</Link></li>
               <li><Link href="/kas">Transparansi kas</Link></li>
               <li><Link href="/agenda">Agenda</Link></li>
