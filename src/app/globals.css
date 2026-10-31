@@ -1,0 +1,191 @@
+/* ==========================================================
+   Gaya dasar bersama (dipakai halaman publik dan panel admin).
+   Tampilan website publik ada di publik.css (semua berawalan .tema).
+   Tampilan panel admin ada di admin/admin.css.
+   Variabel warna di bawah ini dipakai panel admin, jangan dihapus.
+   ========================================================== */
+
+:root {
+  --hijau-950: #052a17;
+  --hijau-900: #07391f;
+  --hijau-800: #0a4d2a;
+  --hijau-600: #14804a;
+  --hijau-200: #bfdcc9;
+  --hijau-100: #ddeee3;
+  --hijau-50: #f1f7f2;
+  --kuning: #f4b400;
+  --kuning-tua: #7a5800;
+  --tinta: #0f2318;
+  --tinta-2: #3f5a49;
+  --garis: #c9dccf;
+  --merah: #b3261e;
+  --putih: #ffffff;
+
+  --font-judul: "Bricolage Grotesque Variable", "Segoe UI", system-ui, sans-serif;
+  --font-isi: "Public Sans Variable", "Segoe UI", system-ui, sans-serif;
+
+  --lebar: 1120px;
+  --radius: 6px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--hijau-50);
+  color: var(--tinta);
+  font-family: var(--font-isi);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: var(--hijau-800);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--hijau-600);
+}
+
+:focus-visible {
+  outline: 3px solid var(--hijau-600);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.on-dark :focus-visible {
+  outline-color: var(--kuning);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-judul);
+  line-height: 1.1;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+  font-weight: 750;
+}
+
+h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--lebar);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.angka {
+  font-variant-numeric: tabular-nums;
+}
+
+.teks-kecil {
+  font-size: 0.9rem;
+  color: var(--tinta-2);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Tombol menu (dipakai panel admin) ---------- */
+
+.menu-btn {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  font-family: var(--font-judul);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--putih);
+  background: var(--hijau-900);
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.menu-btn .garis {
+  position: relative;
+  width: 20px;
+  height: 14px;
+  border-top: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+
+.menu-btn .garis::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  border-top: 2px solid currentColor;
+}
+
+.menu-btn[aria-expanded="true"] .garis {
+  border-color: transparent;
+}
+
+.menu-btn[aria-expanded="true"] .garis::before,
+.menu-btn[aria-expanded="true"] .garis::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  border-top: 2px solid currentColor;
+}
+
+.menu-btn[aria-expanded="true"] .garis::before {
+  transform: rotate(45deg);
+}
+
+.menu-btn[aria-expanded="true"] .garis::after {
+  transform: rotate(-45deg);
+}
+
+@media (max-width: 760px) {
+  .menu-btn {
+    display: inline-flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
