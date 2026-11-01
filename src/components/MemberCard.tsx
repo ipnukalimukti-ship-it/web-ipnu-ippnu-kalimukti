@@ -6,26 +6,20 @@ import { inisial, tanggal } from "@/lib/format";
 import { tautanMedsos, usernameAman } from "@/lib/medsos";
 import type { Member } from "@/lib/types";
 
-/** Tinggi paling besar kartu saat dibalik: sekitar 90% tinggi layar. Kalau isinya lebih panjang, bagian belakang bisa digulir. */
-function tinggiMaks(): number {
-  return Math.max(520, Math.round(window.innerHeight * 0.9));
-}
 // Lamanya animasi balik (harus sama dengan CSS .px-kartu-dalam).
 const DURASI = 650;
 
 /**
- * Kartu anggota yang membalik di tempat.
- *  Depan  : foto, nama (satu baris, dipotong "..."), medsos, tempat tanggal lahir.
- *  Belakang: nama lengkap, bio, prestasi dan kegiatan.
+ * Kartu anggota yang membalik di tempat. Ukuran kartu tidak berubah.
+ *  Depan   : foto, nama (satu baris, dipotong "..."), medsos, tempat tanggal lahir.
+ *  Belakang: nama lengkap, bio, prestasi dan kegiatan. Kalau panjang, isinya digulir di dalam kartu.
  */
 export default function MemberCard({ m }: { m: Member }) {
   const [terbalik, setTerbalik] = useState(false);
-  const dalam = useRef<HTMLDivElement>(null);
-  const depan = useRef<HTMLDivElement>(null);
+  const [adaLanjut, setAdaLanjut] = useState(false);
   const isi = useRef<HTMLDivElement>(null);
   const tombolDepan = useRef<HTMLButtonElement>(null);
   const tombolBalik = useRef<HTMLButtonElement>(null);
-  const tinggiAsal = useRef(0);
   const pernahBalik = useRef(false);
   const idBelakang = `belakang-${m.id}`;
 
@@ -48,32 +42,17 @@ export default function MemberCard({ m }: { m: Member }) {
       <LogoIppnu size={30} alt={m.jenis} />
     );
 
-  /** Tinggi yang dibutuhkan sisi belakang (dibatasi tinggiMaks). */
-  function tinggiTarget(): number {
-    // +4 untuk garis tepi kartu (2 x 1,5px), supaya isi yang pas tidak jadi bisa digulir.
-    return Math.min(tinggiMaks(), Math.max(tinggiAsal.current, (isi.current?.scrollHeight ?? 0) + 4));
+  function balik() {
+    pernahBalik.current = true;
+    if (!terbalik && isi.current) isi.current.scrollTop = 0; // selalu mulai dari atas
+    setTerbalik((t) => !t);
   }
 
-  function balik() {
-    const el = dalam.current;
-    if (!el) return;
-    pernahBalik.current = true;
-
-    if (!terbalik) {
-      // Depan ke belakang: kartu tumbuh sampai muat seluruh isi belakang.
-      tinggiAsal.current = depan.current?.offsetHeight ?? el.offsetHeight;
-      el.style.height = `${tinggiAsal.current}px`;
-      void el.offsetHeight; // paksa browser menghitung tinggi awal supaya animasinya jalan
-      el.style.height = `${tinggiTarget()}px`;
-      setTerbalik(true);
-    } else {
-      // Belakang ke depan: kartu kembali ke tinggi semula, lalu tinggi dibebaskan lagi.
-      el.style.height = `${tinggiAsal.current}px`;
-      setTerbalik(false);
-      window.setTimeout(() => {
-        if (dalam.current) dalam.current.style.height = "";
-      }, DURASI + 60);
-    }
+  /** Tampilkan pudaran di bawah kalau isi masih bisa digulir ke bawah. */
+  function cekGulir() {
+    const e = isi.current;
+    if (!e) return;
+    setAdaLanjut(e.scrollHeight - e.scrollTop - e.clientHeight > 6);
   }
 
   // Pindahkan fokus ke sisi yang sedang terlihat (untuk pengguna keyboard dan pembaca layar).
@@ -86,14 +65,18 @@ export default function MemberCard({ m }: { m: Member }) {
     return () => window.clearTimeout(t);
   }, [terbalik]);
 
-  // Kalau layar berubah ukuran saat kartu terbuka, sesuaikan tingginya.
+  // Cek apakah isi belakang perlu digulir (saat dibuka dan saat layar berubah ukuran).
   useEffect(() => {
-    if (!terbalik) return;
-    const sesuaikan = () => {
-      if (dalam.current) dalam.current.style.height = `${tinggiTarget()}px`;
+    if (!terbalik) {
+      setAdaLanjut(false);
+      return;
+    }
+    const t = window.setTimeout(cekGulir, 30);
+    window.addEventListener("resize", cekGulir);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("resize", cekGulir);
     };
-    window.addEventListener("resize", sesuaikan);
-    return () => window.removeEventListener("resize", sesuaikan);
   }, [terbalik]);
 
   return (
@@ -103,9 +86,9 @@ export default function MemberCard({ m }: { m: Member }) {
         if (e.key === "Escape" && terbalik) balik();
       }}
     >
-      <div className="px-kartu-dalam" ref={dalam}>
+      <div className="px-kartu-dalam">
         {/* ---------- Depan ---------- */}
-        <div className="px-muka px-depan" ref={depan} inert={terbalik}>
+        <div className="px-muka px-depan" inert={terbalik}>
           <div className="px-foto">
             {m.foto_url ? (
               <img src={m.foto_url} alt="" loading="lazy" />
@@ -163,11 +146,24 @@ export default function MemberCard({ m }: { m: Member }) {
         </div>
 
         {/* ---------- Belakang ---------- */}
-        <div className="px-muka px-belakang" id={idBelakang} inert={!terbalik}>
-          <div className="px-belakang-isi" ref={isi}>
-            <button type="button" ref={tombolBalik} className="px-balik" onClick={balik}>
-              <span aria-hidden="true">‹</span> Kembali
-            </button>
+        <div
+          className={`px-muka px-belakang${adaLanjut ? " ada-lanjut" : ""}`}
+          id={idBelakang}
+          inert={!terbalik}
+        >
+          <div
+            className="px-belakang-isi"
+            ref={isi}
+            onScroll={cekGulir}
+            tabIndex={0}
+            role="region"
+            aria-label={`Detail ${m.nama}`}
+          >
+            <div className="px-balik-bar">
+              <button type="button" ref={tombolBalik} className="px-balik" onClick={balik}>
+                <span aria-hidden="true">‹</span> Kembali
+              </button>
+            </div>
 
             <p className="px-b-org">
               <span className="px-b-logo">{logo}</span>

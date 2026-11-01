@@ -1437,9 +1437,7 @@ html:has(.tema) body {
 .tema .px-kartu-dalam {
   position: relative;
   transform-style: preserve-3d;
-  transition:
-    transform 0.65s cubic-bezier(0.2, 0.75, 0.25, 1),
-    height 0.65s cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition: transform 0.65s cubic-bezier(0.2, 0.75, 0.25, 1);
 }
 
 .tema .px-kartu.terbalik .px-kartu-dalam {
@@ -1475,6 +1473,24 @@ html:has(.tema) body {
   transform: rotateY(180deg);
   border-color: rgba(245, 234, 20, 0.55);
   background: linear-gradient(180deg, #0f2218, #0a1510);
+}
+
+/* Pudaran tipis di bawah: tanda masih ada isi yang bisa digulir */
+.tema .px-belakang::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 54px;
+  background: linear-gradient(to top, #0a1510 12%, rgba(10, 21, 16, 0));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tema .px-belakang.ada-lanjut::after {
+  opacity: 1;
 }
 
 /* ----- Depan ----- */
@@ -1584,18 +1600,33 @@ html:has(.tema) body {
 
 .tema .px-belakang-isi {
   flex: 1;
-  padding: 14px 16px 18px;
+  min-height: 0;
+  padding: 0 16px 22px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: var(--hijau-logo) transparent;
+  scrollbar-color: var(--kuning-logo) transparent;
+}
+
+.tema .px-belakang-isi:focus-visible {
+  outline-offset: -4px;
+}
+
+/* Tombol Kembali tetap terlihat di atas walaupun isinya digulir */
+.tema .px-balik-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -16px;
+  padding: 12px 16px 10px;
+  background: linear-gradient(#0f2218 78%, rgba(15, 34, 24, 0));
 }
 
 .tema .px-balik {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin: 0 0 14px;
+  margin: 0;
   padding: 7px 14px;
   border: 1px solid var(--garis);
   border-radius: 999px;
@@ -1691,15 +1722,6 @@ html:has(.tema) body {
   color: var(--kuning-logo);
 }
 
-/* Hanya kartu yang dibalik yang bertambah tinggi, kartu lain tidak ikut melar */
-.tema .px-grid-anggota {
-  align-items: start;
-}
-
-.tema .px-jalur {
-  align-items: flex-start;
-}
-
 /* ==========================================================
    Halaman struktur pengurus
    ========================================================== */
@@ -1787,7 +1809,11 @@ html:has(.tema) body {
 /* Kartu anggota di layar kecil: sisi belakang dibuat lebih hemat tempat */
 @media (max-width: 560px) {
   .tema .px-belakang-isi {
-    padding: 12px 12px 16px;
+    padding: 0 12px 18px;
+  }
+  .tema .px-balik-bar {
+    margin: 0 -12px;
+    padding: 10px 12px 8px;
   }
   .tema .px-prestasi li {
     padding: 7px 10px 7px 26px;
