@@ -2,13 +2,13 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type Peran = "admin" | "sekretaris" | "bendahara";
+export type Peran = "pengelola" | "admin" | "sekretaris" | "bendahara";
 export type Profil = { id: string; nama: string; role: Peran };
 
-/** Admin boleh semuanya; peran lain hanya yang disebut. */
+/** Pengelola dan admin boleh semuanya; peran lain hanya yang disebut. */
 export function bisa(profil: Profil | null, ...peran: Peran[]): boolean {
   if (!profil) return false;
-  return profil.role === "admin" || peran.includes(profil.role);
+  return profil.role === "pengelola" || profil.role === "admin" || peran.includes(profil.role);
 }
 
 export function pesanError(e: unknown): string {

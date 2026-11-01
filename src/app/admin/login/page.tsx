@@ -30,6 +30,12 @@ export default function Login() {
       });
       return;
     }
+    // Catat bahwa orang ini masuk (untuk menu Aktivitas). Kalau gagal, tidak mengganggu login.
+    try {
+      await db.rpc("catat_login");
+    } catch {
+      /* diabaikan */
+    }
     router.replace("/admin");
   }
 

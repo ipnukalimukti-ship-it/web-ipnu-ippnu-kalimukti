@@ -23,15 +23,20 @@ export function Halaman({
   judul,
   deskripsi,
   peran,
+  hanya,
   children,
 }: {
   judul: string;
   deskripsi?: string;
-  peran: Peran[];
+  /** Peran yang boleh membuka halaman ini (admin dan pengelola selalu boleh). */
+  peran?: Peran[];
+  /** Khusus satu peran saja, admin pun tidak boleh. */
+  hanya?: Peran;
   children: React.ReactNode;
 }) {
   const { profil } = useAdmin();
-  if (!bisa(profil, ...peran)) {
+  const boleh = hanya ? profil.role === hanya : bisa(profil, ...(peran ?? []));
+  if (!boleh) {
     return (
       <>
         <h1 className="adm-judul">{judul}</h1>

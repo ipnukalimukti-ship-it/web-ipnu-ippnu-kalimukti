@@ -289,14 +289,16 @@ function Isi() {
               <input id="tt" maxLength={120} placeholder="@username" value={form.tiktok} onChange={(e) => ubah("tiktok", e.target.value)} />
             </div>
           </div>
-          <label className="adm-centang">
-            <input type="checkbox" checked={form.tampil_medsos} onChange={(e) => ubah("tampil_medsos", e.target.checked)} />
-            Tampilkan Instagram dan TikTok di website
-          </label>
-          <span className="adm-bantu">
-            Nyalakan hanya kalau anggota sudah setuju (dan orang tuanya, kalau masih di bawah umur). Kalau mati, medsos tidak
-            tampil sama sekali.
-          </span>
+          <div className="adm-field">
+            <label className="adm-centang">
+              <input type="checkbox" checked={form.tampil_medsos} onChange={(e) => ubah("tampil_medsos", e.target.checked)} />
+              Tampilkan Instagram dan TikTok di website
+            </label>
+            <span className="adm-bantu">
+              Nyalakan hanya kalau anggota sudah setuju (dan orang tuanya, kalau masih di bawah umur). Kalau mati, medsos
+              tidak tampil sama sekali.
+            </span>
+          </div>
 
           <div className="adm-aksi">
             <label className="adm-centang">

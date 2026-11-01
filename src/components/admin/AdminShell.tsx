@@ -24,7 +24,7 @@ type Status =
   | { s: "bukan-pengurus"; email?: string }
   | { s: "ok"; profil: Profil };
 
-const MENU: { href: string; label: string; peran: Peran[] | null }[] = [
+const MENU: { href: string; label: string; peran: Peran[] | null; hanya?: Peran }[] = [
   { href: "/admin", label: "Dashboard", peran: null },
   { href: "/admin/berita", label: "Berita", peran: ["sekretaris"] },
   { href: "/admin/agenda", label: "Agenda", peran: ["sekretaris"] },
@@ -34,9 +34,11 @@ const MENU: { href: string; label: string; peran: Peran[] | null }[] = [
   { href: "/admin/kas", label: "Kas", peran: ["bendahara"] },
   { href: "/admin/iuran", label: "Iuran", peran: ["bendahara"] },
   { href: "/admin/laporan", label: "Laporan", peran: ["sekretaris", "bendahara"] },
+  { href: "/admin/aktivitas", label: "Aktivitas", peran: null, hanya: "pengelola" },
 ];
 
 const NAMA_PERAN: Record<Peran, string> = {
+  pengelola: "Pengelola",
   admin: "Admin",
   sekretaris: "Sekretaris",
   bendahara: "Bendahara",
@@ -145,7 +147,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }
 
   const profil = status.profil;
-  const menu = MENU.filter((m) => m.peran === null || bisa(profil, ...m.peran));
+  const menu = MENU.filter((m) =>
+    m.hanya ? profil.role === m.hanya : m.peran === null || bisa(profil, ...m.peran),
+  );
 
   return (
     <AdminCtx.Provider value={{ db: db as SupabaseClient, profil }}>
