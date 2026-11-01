@@ -19,6 +19,12 @@ export const members: Member[] = [
   { id: "m6", nama: "Nabila Azzahra", tempat_lahir: "Majalengka", tanggal_lahir: "2008-09-09", jenis: "IPPNU", foto_url: null, ...polos },
   { id: "m7", nama: "Farhan Maulana", tempat_lahir: "Kuningan", tanggal_lahir: "2007-12-04", jenis: "IPNU", foto_url: null, ...polos },
   { id: "m8", nama: "Lutfiah Rosyidah", tempat_lahir: "Kuningan", tanggal_lahir: "2009-02-21", jenis: "IPPNU", foto_url: null, ...polos },
+  {
+    id: "m9", nama: "Muhammad Abdurrahman Al-Ghifari Prasetyo Nugroho", tempat_lahir: "Kuningan", tanggal_lahir: "2008-08-17", jenis: "IPNU", foto_url: null,
+    bio: "Contoh nama panjang. Di depan kartu namanya dipotong satu baris, dan nama lengkapnya baru terlihat di sisi belakang ini. Ini data contoh.",
+    prestasi: "Juara 1 lomba pidato bahasa Arab tingkat kabupaten 2025\nJuara 2 musabaqah tilawatil Quran tingkat kecamatan 2024\nKetua panitia Hari Santri 2025\nPeserta pelatihan kader PKPNU angkatan pertama\nDelegasi konferensi ranting 2026",
+    instagram: "abdurrahman.contoh", tiktok: "abdurrahman.contoh",
+  },
 ];
 
 export const pengurus: Pengurus[] = [
