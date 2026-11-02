@@ -13,14 +13,37 @@ export type Member = {
   tiktok: string | null;
 };
 
-export type Pengurus = {
+export type JenisDepartemen = Jenis | "GABUNGAN";
+
+export type Periode = {
   id: string;
   nama: string;
-  jabatan: string;
-  bagian: string;
-  jenis: Jenis;
+  sekarang: boolean;
+};
+
+/** Satu orang yang menjabat di satu departemen (baris dari view struktur_publik). */
+export type Penugasan = {
+  penugasan_id: string;
+  periode_id: string;
+  departemen_id: string;
+  departemen: string;
+  departemen_jenis: JenisDepartemen;
+  departemen_urutan: number;
+  member_id: string;
+  nama: string;
+  member_jenis: Jenis;
   foto_url: string | null;
+  jabatan: string;
+  utama: boolean;
   urutan: number;
+  instagram: string | null; // username saja; null kalau medsos tidak ditampilkan
+  tiktok: string | null;
+};
+
+export type Struktur = {
+  periode: Periode[];
+  aktif: Periode | null;
+  baris: Penugasan[];
 };
 
 export type News = {

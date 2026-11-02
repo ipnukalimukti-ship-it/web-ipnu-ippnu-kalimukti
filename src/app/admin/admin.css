@@ -563,3 +563,35 @@
   border-top: 1px solid var(--garis);
   font-size: 1.05rem;
 }
+
+/* Daftar anggota yang bisa dicentang (menu Struktur) */
+.adm-pilih {
+  display: grid;
+  gap: 2px;
+  max-height: 280px;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid var(--garis);
+  border-radius: 12px;
+  background: var(--putih);
+}
+
+.adm-pilih label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.adm-pilih label:hover {
+  background: var(--hijau-50);
+}
+
+.adm-pilih input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}

@@ -23,7 +23,10 @@ const BAGIAN: Record<string, string> = {
   kas_transaksi: "Kas",
   iuran_jenis: "Jenis iuran",
   iuran_pembayaran: "Iuran",
-  pengurus: "Pengurus",
+  pengurus: "Pengurus (lama)",
+  periode: "Periode",
+  departemen: "Departemen",
+  penugasan: "Jabatan struktur",
 };
 
 const KATA_AKSI: Record<Catatan["aksi"], string> = {

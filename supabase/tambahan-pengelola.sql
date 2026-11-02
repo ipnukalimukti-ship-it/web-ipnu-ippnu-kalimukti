@@ -63,7 +63,7 @@ create policy "aktivitas: pengelola baca" on public.aktivitas
 revoke all on public.aktivitas from anon, authenticated;
 grant select on public.aktivitas to authenticated;
 
--- Dipanggil otomatis setiap ada tambah, ubah, atau hapus pada tabel di bawah.
+-- Dipanggil otomatis setiap ada tambah, ubah, atau hapus pada tabel yang dipantau.
 create or replace function public.catat_aktivitas() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
@@ -102,6 +102,11 @@ begin
       coalesce((select m.nama from public.members m where m.id = (baris->>'member_id')::uuid), 'anggota')
       || ' (periode ' || to_char((baris->>'periode')::date, 'YYYY-MM') || ')'
     when 'pengurus' then (baris->>'nama') || ' (' || (baris->>'jabatan') || ')'
+    when 'periode' then baris->>'nama'
+    when 'departemen' then baris->>'nama'
+    when 'penugasan' then
+      coalesce((select m.nama from public.members m where m.id = (baris->>'member_id')::uuid), 'anggota')
+      || ' sebagai ' || (baris->>'jabatan')
     else null
   end;
 
@@ -123,12 +128,16 @@ declare
 begin
   foreach t in array array[
     'members', 'news', 'events', 'gallery_albums', 'gallery_photos',
-    'kas_transaksi', 'iuran_jenis', 'iuran_pembayaran', 'pengurus'
+    'kas_transaksi', 'iuran_jenis', 'iuran_pembayaran', 'pengurus',
+    'periode', 'departemen', 'penugasan'
   ] loop
-    execute format('drop trigger if exists catat_aktivitas on public.%I', t);
-    execute format(
-      'create trigger catat_aktivitas after insert or update or delete on public.%I
-         for each row execute function public.catat_aktivitas()', t);
+    -- Tabel yang belum ada (misalnya struktur belum dipasang) dilewati.
+    if to_regclass('public.' || t) is not null then
+      execute format('drop trigger if exists catat_aktivitas on public.%I', t);
+      execute format(
+        'create trigger catat_aktivitas after insert or update or delete on public.%I
+           for each row execute function public.catat_aktivitas()', t);
+    end if;
   end loop;
 end $$;
 

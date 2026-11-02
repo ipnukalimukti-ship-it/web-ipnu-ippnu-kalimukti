@@ -1,6 +1,6 @@
 // Data contoh untuk mode demo (saat Supabase belum disambungkan).
 // Semua nama dan angka di sini hanya contoh, bukan data asli.
-import type { Album, EventItem, KasMonth, Member, News, Pengurus } from "./types";
+import type { Album, EventItem, KasMonth, Member, News, Penugasan, Periode, Struktur } from "./types";
 
 const polos = { bio: null, prestasi: null, instagram: null, tiktok: null };
 
@@ -27,14 +27,71 @@ export const members: Member[] = [
   },
 ];
 
-export const pengurus: Pengurus[] = [
-  { id: "p1", nama: "Harun", jabatan: "Ketua", bagian: "BPH", jenis: "IPNU", foto_url: null, urutan: 10 },
-  { id: "p2", nama: "Hasan", jabatan: "Wakil Ketua", bagian: "BPH", jenis: "IPNU", foto_url: null, urutan: 20 },
-  { id: "p3", nama: "Fakhrurroji", jabatan: "Sekretaris", bagian: "BPH", jenis: "IPNU", foto_url: null, urutan: 30 },
-  { id: "p4", nama: "Azam", jabatan: "Bendahara", bagian: "BPH", jenis: "IPNU", foto_url: null, urutan: 40 },
-  { id: "p5", nama: "Ismat", jabatan: "Media", bagian: "Media", jenis: "IPNU", foto_url: null, urutan: 50 },
-  { id: "p6", nama: "Sulis", jabatan: "Ketua", bagian: "BPH", jenis: "IPPNU", foto_url: null, urutan: 10 },
+export const periode: Periode[] = [
+  { id: "per-2", nama: "2025-2027", sekarang: true },
+  { id: "per-1", nama: "2023-2025", sekarang: false },
 ];
+
+type Bantu = Pick<Penugasan, "nama" | "member_jenis" | "jabatan" | "utama" | "urutan"> &
+  Partial<Pick<Penugasan, "instagram" | "tiktok">>;
+
+function tugas(periode_id: string, departemen_id: string, departemen: string, jenis: Penugasan["departemen_jenis"], dUrut: number, orang: Bantu[]): Penugasan[] {
+  return orang.map((o, i) => ({
+    penugasan_id: `${departemen_id}-${i}`,
+    periode_id,
+    departemen_id,
+    departemen,
+    departemen_jenis: jenis,
+    departemen_urutan: dUrut,
+    foto_url: null,
+    member_id: `${departemen_id}-m${i}`,
+    instagram: null,
+    tiktok: null,
+    ...o,
+  }));
+}
+
+const strukturSekarang: Penugasan[] = [
+  ...tugas("per-2", "d1", "BPH", "IPNU", 10, [
+    { nama: "Harun", member_jenis: "IPNU", jabatan: "Ketua", utama: true, urutan: 10, instagram: "harun.contoh" },
+    { nama: "Hasan", member_jenis: "IPNU", jabatan: "Wakil Ketua", utama: true, urutan: 20 },
+    { nama: "Fakhrurroji", member_jenis: "IPNU", jabatan: "Sekretaris", utama: true, urutan: 30, tiktok: "fakhrurroji.contoh" },
+    { nama: "Azam", member_jenis: "IPNU", jabatan: "Bendahara", utama: true, urutan: 40 },
+  ]),
+  ...tugas("per-2", "d2", "Departemen Media", "IPNU", 20, [
+    { nama: "Ismat", member_jenis: "IPNU", jabatan: "Koordinator", utama: true, urutan: 10, instagram: "ismat.contoh", tiktok: "ismat.contoh" },
+    { nama: "Dimas Prasetyo", member_jenis: "IPNU", jabatan: "Anggota", utama: false, urutan: 20 },
+    { nama: "Farhan Maulana", member_jenis: "IPNU", jabatan: "Anggota", utama: false, urutan: 30 },
+    { nama: "Muhammad Abdurrahman Al-Ghifari Prasetyo Nugroho", member_jenis: "IPNU", jabatan: "Anggota dan Desainer Grafis", utama: false, urutan: 40, instagram: "abdurrahman.contoh" },
+  ]),
+  ...tugas("per-2", "d3", "Departemen Kaderisasi", "IPNU", 30, [
+    { nama: "Ahmad Fauzan", member_jenis: "IPNU", jabatan: "Koordinator", utama: true, urutan: 10 },
+    { nama: "Muhammad Rizki", member_jenis: "IPNU", jabatan: "Anggota", utama: false, urutan: 20 },
+  ]),
+  ...tugas("per-2", "d4", "BPH", "IPPNU", 10, [
+    { nama: "Sulis", member_jenis: "IPPNU", jabatan: "Ketua", utama: true, urutan: 10 },
+    { nama: "Siti Nurhalimah", member_jenis: "IPPNU", jabatan: "Sekretaris", utama: true, urutan: 20, instagram: "siti.contoh" },
+  ]),
+  ...tugas("per-2", "d5", "Departemen Media", "IPPNU", 20, [
+    { nama: "Nabila Azzahra", member_jenis: "IPPNU", jabatan: "Koordinator", utama: true, urutan: 10 },
+    { nama: "Lutfiah Rosyidah", member_jenis: "IPPNU", jabatan: "Anggota", utama: false, urutan: 20 },
+  ]),
+  ...tugas("per-2", "d6", "Pembina", "GABUNGAN", 90, [
+    { nama: "Aisyah Putri Rahma", member_jenis: "IPPNU", jabatan: "Koordinator", utama: true, urutan: 10 },
+  ]),
+];
+
+const strukturLama: Penugasan[] = [
+  ...tugas("per-1", "e1", "BPH", "IPNU", 10, [
+    { nama: "Contoh Pengurus Lama", member_jenis: "IPNU", jabatan: "Ketua", utama: true, urutan: 10 },
+  ]),
+];
+
+export function struktur(periodeId?: string): Struktur {
+  const aktif = periode.find((p) => p.id === periodeId) ?? periode.find((p) => p.sekarang) ?? periode[0] ?? null;
+  const baris = aktif?.id === "per-1" ? strukturLama : aktif?.id === "per-2" ? strukturSekarang : [];
+  return { periode, aktif, baris };
+}
 
 export const news: News[] = [
   {

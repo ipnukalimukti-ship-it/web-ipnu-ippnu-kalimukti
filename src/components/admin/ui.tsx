@@ -24,6 +24,7 @@ export function Halaman({
   deskripsi,
   peran,
   hanya,
+  semua,
   children,
 }: {
   judul: string;
@@ -32,10 +33,12 @@ export function Halaman({
   peran?: Peran[];
   /** Khusus satu peran saja, admin pun tidak boleh. */
   hanya?: Peran;
+  /** Boleh dibuka semua peran yang sudah masuk. */
+  semua?: boolean;
   children: React.ReactNode;
 }) {
   const { profil } = useAdmin();
-  const boleh = hanya ? profil.role === hanya : bisa(profil, ...(peran ?? []));
+  const boleh = semua ? true : hanya ? profil.role === hanya : bisa(profil, ...(peran ?? []));
   if (!boleh) {
     return (
       <>

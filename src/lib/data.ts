@@ -5,7 +5,7 @@
 //   tidak pernah tampil di website yang sudah live).
 import { getSupabase } from "./supabase";
 import * as sample from "./sample";
-import type { Album, EventItem, KasSummary, Member, News, Pengurus } from "./types";
+import type { Album, EventItem, KasSummary, Member, News, Penugasan, Periode, Struktur } from "./types";
 
 function check(res: { data: unknown; error: { message: string } | null }): unknown {
   if (res.error) throw new Error(res.error.message);
@@ -37,16 +37,30 @@ export async function getMembers(opts: { jenis?: string; q?: string } = {}): Pro
   return (check(await query) as Member[] | null) ?? [];
 }
 
-export async function getPengurus(): Promise<Pengurus[]> {
+/** Struktur kepengurusan untuk satu periode (bawaan: periode yang ditandai "sekarang"). */
+export async function getStruktur(periodeId?: string): Promise<Struktur> {
   const db = getSupabase();
-  if (!db) return sample.pengurus;
+  if (!db) return sample.struktur(periodeId);
 
-  const res = await db
-    .from("pengurus")
-    .select("id,nama,jabatan,bagian,jenis,foto_url,urutan")
+  const pr = await db
+    .from("periode")
+    .select("id,nama,sekarang")
+    .order("sekarang", { ascending: false })
+    .order("nama", { ascending: false });
+  const periode = (check(pr) as Periode[] | null) ?? [];
+  const aktif = periode.find((p) => p.id === periodeId) ?? periode.find((p) => p.sekarang) ?? periode[0] ?? null;
+  if (!aktif) return { periode, aktif: null, baris: [] };
+
+  const rs = await db
+    .from("struktur_publik")
+    .select(
+      "penugasan_id,periode_id,departemen_id,departemen,departemen_jenis,departemen_urutan,member_id,nama,member_jenis,foto_url,jabatan,utama,urutan,instagram,tiktok",
+    )
+    .eq("periode_id", aktif.id)
+    .order("departemen_urutan", { ascending: true })
     .order("urutan", { ascending: true })
     .order("nama", { ascending: true });
-  return (check(res) as Pengurus[] | null) ?? [];
+  return { periode, aktif, baris: (check(rs) as Penugasan[] | null) ?? [] };
 }
 
 export async function getNews(limit = 20): Promise<News[]> {
