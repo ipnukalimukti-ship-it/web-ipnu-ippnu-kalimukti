@@ -2,16 +2,18 @@
 
 import { LogoIpnu, LogoIppnu } from "./Logo";
 import { inisial, tanggal } from "@/lib/format";
+import { jenjangValid } from "@/lib/kaderisasi";
 import { tautanMedsos, usernameAman } from "@/lib/medsos";
 import { useKartuBalik } from "@/lib/useKartuBalik";
-import type { Member } from "@/lib/types";
+import type { Member, Riwayat } from "@/lib/types";
 
 /**
  * Kartu anggota yang membalik di tempat. Ukuran kartu tidak berubah.
  *  Depan   : foto, nama (satu baris, dipotong "..."), medsos, tempat tanggal lahir.
- *  Belakang: nama lengkap, bio, prestasi dan kegiatan. Kalau panjang, isinya digulir di dalam kartu.
+ *  Belakang: nama lengkap, moto, jenjang kaderisasi, riwayat kepengurusan, kesan, pesan,
+ *            hobi, dan cita-cita. Kalau panjang, isinya digulir di dalam kartu.
  */
-export default function MemberCard({ m }: { m: Member }) {
+export default function MemberCard({ m, riwayat = [] }: { m: Member; riwayat?: Riwayat[] }) {
   const { terbalik, adaLanjut, isi, tombolDepan, tombolBalik, balik, cekGulir, tekanTombol } = useKartuBalik();
   const idBelakang = `belakang-${m.id}`;
 
@@ -19,13 +21,11 @@ export default function MemberCard({ m }: { m: Member }) {
   const ttl = [m.tempat_lahir, m.tanggal_lahir ? tanggal(m.tanggal_lahir) : null]
     .filter(Boolean)
     .join(", ");
-  const prestasi = (m.prestasi ?? "")
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
   const ig = usernameAman(m.instagram);
   const tt = usernameAman(m.tiktok);
-  const adaIsi = Boolean(m.bio) || prestasi.length > 0;
+  const kader = jenjangValid(m.kaderisasi);
+  const adaIsi =
+    Boolean(m.moto || m.kesan || m.pesan || m.hobi || m.cita_cita) || kader.length > 0 || riwayat.length > 0;
 
   const logo =
     m.jenis === "IPNU" ? (
@@ -35,10 +35,7 @@ export default function MemberCard({ m }: { m: Member }) {
     );
 
   return (
-    <li
-      className={`px-kartu px-anggota-${kelas}${terbalik ? " terbalik" : ""}`}
-      onKeyDown={tekanTombol}
-    >
+    <li className={`px-kartu px-anggota-${kelas}${terbalik ? " terbalik" : ""}`} onKeyDown={tekanTombol}>
       <div className="px-kartu-dalam">
         {/* ---------- Depan ---------- */}
         <div className="px-muka px-depan" inert={terbalik}>
@@ -125,17 +122,64 @@ export default function MemberCard({ m }: { m: Member }) {
             <h3 className="px-b-nama">{m.nama}</h3>
             {ttl && <p className="px-b-ttl">{ttl}</p>}
 
-            {m.bio && <p className="px-b-bio">{m.bio}</p>}
+            {m.moto && <blockquote className="px-moto">“{m.moto}”</blockquote>}
 
-            {prestasi.length > 0 && (
-              <section aria-label="Prestasi dan kegiatan">
-                <h4 className="px-b-judul">Prestasi dan kegiatan</h4>
-                <ul className="px-prestasi">
-                  {prestasi.map((p, i) => (
-                    <li key={i}>{p}</li>
+            {kader.length > 0 && (
+              <section aria-label="Jenjang kaderisasi">
+                <h4 className="px-b-judul">Kaderisasi</h4>
+                <ul className="px-kader">
+                  {kader.map((k) => (
+                    <li key={k}>{k}</li>
                   ))}
                 </ul>
               </section>
+            )}
+
+            {riwayat.length > 0 && (
+              <section aria-label="Riwayat kepengurusan">
+                <h4 className="px-b-judul">Riwayat kepengurusan</h4>
+                <ul className="px-riwayat">
+                  {riwayat.map((r, i) => (
+                    <li key={i}>
+                      <strong>{r.jabatan}</strong>
+                      <span>
+                        {r.departemen}, {r.periode}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {m.kesan && (
+              <section aria-label="Kesan">
+                <h4 className="px-b-judul">Kesan</h4>
+                <p className="px-b-teks">{m.kesan}</p>
+              </section>
+            )}
+
+            {m.pesan && (
+              <section aria-label="Pesan">
+                <h4 className="px-b-judul">Pesan</h4>
+                <p className="px-b-teks">{m.pesan}</p>
+              </section>
+            )}
+
+            {(m.hobi || m.cita_cita) && (
+              <dl className="px-fakta">
+                {m.hobi && (
+                  <div>
+                    <dt>Hobi</dt>
+                    <dd>{m.hobi}</dd>
+                  </div>
+                )}
+                {m.cita_cita && (
+                  <div>
+                    <dt>Cita-cita</dt>
+                    <dd>{m.cita_cita}</dd>
+                  </div>
+                )}
+              </dl>
             )}
 
             {!adaIsi && <p className="px-b-kosong">Profil lengkap anggota ini belum diisi.</p>}

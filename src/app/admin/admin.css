@@ -595,3 +595,35 @@
   height: 18px;
   flex: none;
 }
+
+/* Angka kecil di menu (pendaftaran baru) */
+.adm-angka-menu {
+  display: inline-block;
+  min-width: 22px;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--kuning);
+  color: var(--tinta);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Rincian pendaftaran */
+.adm-rincian {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.adm-rincian dt {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--tinta-2);
+}
+
+.adm-rincian dd {
+  margin: 1px 0 0;
+}

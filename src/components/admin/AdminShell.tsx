@@ -30,6 +30,7 @@ const MENU: { href: string; label: string; peran: Peran[] | null; hanya?: Peran 
   { href: "/admin/agenda", label: "Agenda", peran: ["sekretaris"] },
   { href: "/admin/galeri", label: "Galeri", peran: ["sekretaris"] },
   { href: "/admin/anggota", label: "Anggota", peran: ["sekretaris", "bendahara"] },
+  { href: "/admin/pendaftaran", label: "Pendaftaran", peran: ["sekretaris"] },
   { href: "/admin/struktur", label: "Struktur", peran: [] },
   { href: "/admin/kas", label: "Kas", peran: ["bendahara"] },
   { href: "/admin/iuran", label: "Iuran", peran: ["bendahara"] },
@@ -101,6 +102,22 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     setMenuBuka(false);
   }, [pathname]);
+
+  // Jumlah pendaftaran anggota yang belum diproses (untuk angka kecil di menu).
+  const [baru, setBaru] = useState(0);
+  useEffect(() => {
+    if (status.s !== "ok" || !db || !bisa(status.profil, "sekretaris")) return;
+    let batal = false;
+    db.from("pendaftaran")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "baru")
+      .then(({ count }) => {
+        if (!batal) setBaru(count ?? 0);
+      });
+    return () => {
+      batal = true;
+    };
+  }, [status, db, pathname]);
 
   if (status.s === "tanpa-supabase") {
     return (
@@ -183,6 +200,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               return (
                 <Link key={m.href} href={m.href} aria-current={aktif ? "page" : undefined}>
                   {m.label}
+                  {m.href === "/admin/pendaftaran" && baru > 0 && (
+                    <span className="adm-angka-menu" aria-label={`${baru} pendaftaran baru`}>
+                      {baru}
+                    </span>
+                  )}
                 </Link>
               );
             })}

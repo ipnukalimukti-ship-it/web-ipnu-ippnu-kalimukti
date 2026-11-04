@@ -1,18 +1,25 @@
 // Data contoh untuk mode demo (saat Supabase belum disambungkan).
 // Semua nama dan angka di sini hanya contoh, bukan data asli.
-import type { Album, EventItem, KasMonth, Member, News, Penugasan, Periode, Struktur } from "./types";
+import type { Album, EventItem, KasMonth, Member, News, Penugasan, Periode, Riwayat, Struktur } from "./types";
 
-const polos = { bio: null, prestasi: null, instagram: null, tiktok: null };
+const polos = {
+  moto: null, kesan: null, pesan: null, hobi: null, cita_cita: null, kaderisasi: null, instagram: null, tiktok: null,
+};
 
 export const members: Member[] = [
   {
     id: "m1", nama: "Ahmad Fauzan", tempat_lahir: "Kuningan", tanggal_lahir: "2008-03-14", jenis: "IPNU", foto_url: null,
-    bio: "Aktif di kegiatan hadroh dan suka mengurus dokumentasi kegiatan ranting. Ini data contoh.",
-    prestasi: "Juara 1 lomba hadroh tingkat kecamatan 2025\nPanitia Hari Santri 2025\nPeserta Makesta angkatan pertama",
+    moto: "Berani mulai, sabar berproses.",
+    kesan: "Di IPNU saya belajar berorganisasi dan punya banyak teman baru. Ini data contoh.",
+    pesan: "Ayo aktif, jangan malu bertanya. Semua orang awalnya juga pemula.",
+    hobi: "Hadroh dan fotografi", cita_cita: "Guru", kaderisasi: ["Makesta", "Lakmud"],
     instagram: "fauzan.contoh", tiktok: "fauzan.contoh",
   },
-  { id: "m2", nama: "Siti Nurhalimah", tempat_lahir: "Kuningan", tanggal_lahir: "2009-07-02", jenis: "IPPNU", foto_url: null,
-    bio: "Bendahara kelas dan gemar menulis. Ini data contoh.", prestasi: "Juara 2 lomba karya tulis pelajar 2025", instagram: "siti.contoh", tiktok: null },
+  {
+    id: "m2", nama: "Siti Nurhalimah", tempat_lahir: "Kuningan", tanggal_lahir: "2009-11-03", jenis: "IPPNU", foto_url: null,
+    moto: "Menulis itu menyembuhkan.", kesan: "Suasananya kekeluargaan. Ini data contoh.", pesan: null,
+    hobi: "Menulis puisi", cita_cita: "Penulis", kaderisasi: ["Makesta"], instagram: "siti.contoh", tiktok: null,
+  },
   { id: "m3", nama: "Muhammad Rizki", tempat_lahir: "Cirebon", tanggal_lahir: "2007-11-23", jenis: "IPNU", foto_url: null, ...polos },
   { id: "m4", nama: "Aisyah Putri Rahma", tempat_lahir: "Kuningan", tanggal_lahir: "2008-01-30", jenis: "IPPNU", foto_url: null, ...polos },
   { id: "m5", nama: "Dimas Prasetyo", tempat_lahir: "Kuningan", tanggal_lahir: "2009-05-18", jenis: "IPNU", foto_url: null, ...polos },
@@ -21,8 +28,10 @@ export const members: Member[] = [
   { id: "m8", nama: "Lutfiah Rosyidah", tempat_lahir: "Kuningan", tanggal_lahir: "2009-02-21", jenis: "IPPNU", foto_url: null, ...polos },
   {
     id: "m9", nama: "Muhammad Abdurrahman Al-Ghifari Prasetyo Nugroho", tempat_lahir: "Kuningan", tanggal_lahir: "2008-08-17", jenis: "IPNU", foto_url: null,
-    bio: "Contoh nama panjang. Di depan kartu namanya dipotong satu baris, dan nama lengkapnya baru terlihat di sisi belakang ini. Ini data contoh.",
-    prestasi: "Juara 1 lomba pidato bahasa Arab tingkat kabupaten 2025\nJuara 2 musabaqah tilawatil Quran tingkat kecamatan 2024\nKetua panitia Hari Santri 2025\nPeserta pelatihan kader PKPNU angkatan pertama\nDelegasi konferensi ranting 2026",
+    moto: "Contoh nama panjang: di depan kartu dipotong satu baris, nama lengkap ada di sisi belakang.",
+    kesan: "Kesan contoh yang cukup panjang supaya terlihat bagaimana isi belakang kartu digulir di dalam kartu tanpa mengubah ukurannya. Ini data contoh.",
+    pesan: "Pesan contoh yang juga cukup panjang. Ini data contoh.",
+    hobi: "Desain grafis", cita_cita: "Desainer", kaderisasi: ["Makesta", "Lakmud", "Lakut"],
     instagram: "abdurrahman.contoh", tiktok: "abdurrahman.contoh",
   },
 ];
@@ -33,7 +42,7 @@ export const periode: Periode[] = [
 ];
 
 type Bantu = Pick<Penugasan, "nama" | "member_jenis" | "jabatan" | "utama" | "urutan"> &
-  Partial<Pick<Penugasan, "instagram" | "tiktok">>;
+  Partial<Pick<Penugasan, "instagram" | "tiktok" | "moto">>;
 
 function tugas(periode_id: string, departemen_id: string, departemen: string, jenis: Penugasan["departemen_jenis"], dUrut: number, orang: Bantu[]): Penugasan[] {
   return orang.map((o, i) => ({
@@ -47,13 +56,15 @@ function tugas(periode_id: string, departemen_id: string, departemen: string, je
     member_id: `${departemen_id}-m${i}`,
     instagram: null,
     tiktok: null,
+    moto: null,
+    periode_nama: periode.find((p) => p.id === periode_id)?.nama ?? "",
     ...o,
   }));
 }
 
 const strukturSekarang: Penugasan[] = [
   ...tugas("per-2", "d1", "BPH", "IPNU", 10, [
-    { nama: "Harun", member_jenis: "IPNU", jabatan: "Ketua", utama: true, urutan: 10, instagram: "harun.contoh" },
+    { nama: "Harun", member_jenis: "IPNU", jabatan: "Ketua", utama: true, urutan: 10, instagram: "harun.contoh", moto: "Kerja nyata, bukan kata-kata." },
     { nama: "Hasan", member_jenis: "IPNU", jabatan: "Wakil Ketua", utama: true, urutan: 20 },
     { nama: "Fakhrurroji", member_jenis: "IPNU", jabatan: "Sekretaris", utama: true, urutan: 30, tiktok: "fakhrurroji.contoh" },
     { nama: "Azam", member_jenis: "IPNU", jabatan: "Bendahara", utama: true, urutan: 40 },
@@ -179,3 +190,14 @@ export const kasBulanan: KasMonth[] = [
   { bulan: "2026-08-01", masuk: 400000, keluar: 90000 },
   { bulan: "2026-07-01", masuk: 300000, keluar: 50000 },
 ];
+
+/** Riwayat kepengurusan per anggota (dicocokkan lewat nama, hanya untuk mode demo). */
+export function riwayat(): Record<string, Riwayat[]> {
+  const hasil: Record<string, Riwayat[]> = {};
+  for (const b of [...strukturSekarang, ...strukturLama]) {
+    const anggota = members.find((m) => m.nama === b.nama);
+    if (!anggota) continue;
+    (hasil[anggota.id] ??= []).push({ periode: b.periode_nama, departemen: b.departemen, jabatan: b.jabatan });
+  }
+  return hasil;
+}

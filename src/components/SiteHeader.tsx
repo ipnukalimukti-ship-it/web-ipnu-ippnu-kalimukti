@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LogoIpnu, LogoIppnu } from "./Logo";
 
-const items = [
+const items: { href: string; label: string; cta?: boolean }[] = [
   { href: "/", label: "Beranda" },
   { href: "/berita", label: "Berita" },
   { href: "/pengurus", label: "Pengurus" },
@@ -13,6 +13,7 @@ const items = [
   { href: "/kas", label: "Kas" },
   { href: "/agenda", label: "Agenda" },
   { href: "/galeri", label: "Galeri" },
+  { href: "/daftar", label: "Daftar", cta: true },
 ];
 
 export default function SiteHeader() {
@@ -51,7 +52,12 @@ export default function SiteHeader() {
           {items.map((it) => {
             const aktif = it.href === "/" ? pathname === "/" : pathname.startsWith(it.href);
             return (
-              <Link key={it.href} href={it.href} aria-current={aktif ? "page" : undefined}>
+              <Link
+                key={it.href}
+                href={it.href}
+                className={it.cta ? "px-nav-cta" : undefined}
+                aria-current={aktif ? "page" : undefined}
+              >
                 {it.label}
               </Link>
             );

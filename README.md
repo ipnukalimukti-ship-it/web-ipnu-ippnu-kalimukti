@@ -103,4 +103,5 @@ supabase/tambahan-admin.sql  fungsi iuran (jalankan setelah schema.sql)
 supabase/tambahan-profil-pengurus.sql  bio, prestasi, medsos anggota, dan struktur pengurus (jalankan setelah tambahan-admin.sql)
 supabase/tambahan-pengelola.sql  peran pengelola dan catatan aktivitas (jalankan setelah tambahan-profil-pengurus.sql, setelah website terbaru terpasang)
 supabase/tambahan-struktur.sql  periode, departemen, dan jabatan pengurus (jalankan setelah tambahan-pengelola.sql, setelah website terbaru terpasang)
+supabase/tambahan-kartu.sql  isi kartu anggota (moto, kesan, pesan, hobi, cita-cita, kaderisasi) dan pendaftaran anggota online (jalankan setelah tambahan-struktur.sql, SEBELUM mengunggah versi website terbaru)
 ```

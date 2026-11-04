@@ -7,10 +7,21 @@ export type Member = {
   tanggal_lahir: string | null; // format YYYY-MM-DD
   jenis: Jenis;
   foto_url: string | null;
-  bio: string | null;
-  prestasi: string | null; // satu poin per baris
+  moto: string | null;
+  kesan: string | null;
+  pesan: string | null;
+  hobi: string | null;
+  cita_cita: string | null;
+  kaderisasi: string[] | null; // contoh: ["Makesta", "Lakmud"]
   instagram: string | null; // username saja; null kalau medsos tidak ditampilkan
   tiktok: string | null;
+};
+
+/** Satu jabatan seseorang di satu periode (untuk riwayat kepengurusan di kartu anggota). */
+export type Riwayat = {
+  periode: string;
+  departemen: string;
+  jabatan: string;
 };
 
 export type JenisDepartemen = Jenis | "GABUNGAN";
@@ -38,6 +49,8 @@ export type Penugasan = {
   urutan: number;
   instagram: string | null; // username saja; null kalau medsos tidak ditampilkan
   tiktok: string | null;
+  moto: string | null;
+  periode_nama: string;
 };
 
 export type Struktur = {

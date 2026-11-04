@@ -95,6 +95,8 @@ export default function PengurusCard({ p, periode }: { p: Penugasan; periode: st
             <p className="px-b-ttl">{p.departemen}</p>
             <p className="px-b-ttl">Periode {periode}</p>
 
+            {p.moto && <blockquote className="px-moto">“{p.moto}”</blockquote>}
+
             <h4 className="px-b-judul">Media sosial</h4>
             {ig || tt ? (
               <div className="px-medsos-belakang">

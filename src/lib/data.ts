@@ -5,7 +5,7 @@
 //   tidak pernah tampil di website yang sudah live).
 import { getSupabase } from "./supabase";
 import * as sample from "./sample";
-import type { Album, EventItem, KasSummary, Member, News, Penugasan, Periode, Struktur } from "./types";
+import type { Album, EventItem, KasSummary, Member, News, Penugasan, Periode, Riwayat, Struktur } from "./types";
 
 function check(res: { data: unknown; error: { message: string } | null }): unknown {
   if (res.error) throw new Error(res.error.message);
@@ -30,11 +30,28 @@ export async function getMembers(opts: { jenis?: string; q?: string } = {}): Pro
 
   let query = db
     .from("members_public")
-    .select("id,nama,tempat_lahir,tanggal_lahir,jenis,foto_url,bio,prestasi,instagram,tiktok")
+    .select("id,nama,tempat_lahir,tanggal_lahir,jenis,foto_url,moto,kesan,pesan,hobi,cita_cita,kaderisasi,instagram,tiktok")
     .order("nama");
   if (jenis) query = query.eq("jenis", jenis);
   if (q) query = query.ilike("nama", `%${q}%`);
   return (check(await query) as Member[] | null) ?? [];
+}
+
+/** Riwayat kepengurusan semua anggota yang tampil, dikelompokkan menurut id anggota (periode terbaru di atas). */
+export async function getRiwayat(): Promise<Record<string, Riwayat[]>> {
+  const db = getSupabase();
+  if (!db) return sample.riwayat();
+
+  const res = await db
+    .from("struktur_publik")
+    .select("member_id,periode_nama,departemen,jabatan")
+    .order("periode_nama", { ascending: false });
+  const baris = (check(res) as { member_id: string; periode_nama: string; departemen: string; jabatan: string }[] | null) ?? [];
+  const hasil: Record<string, Riwayat[]> = {};
+  for (const b of baris) {
+    (hasil[b.member_id] ??= []).push({ periode: b.periode_nama, departemen: b.departemen, jabatan: b.jabatan });
+  }
+  return hasil;
 }
 
 /** Struktur kepengurusan untuk satu periode (bawaan: periode yang ditandai "sekarang"). */
@@ -54,7 +71,7 @@ export async function getStruktur(periodeId?: string): Promise<Struktur> {
   const rs = await db
     .from("struktur_publik")
     .select(
-      "penugasan_id,periode_id,departemen_id,departemen,departemen_jenis,departemen_urutan,member_id,nama,member_jenis,foto_url,jabatan,utama,urutan,instagram,tiktok",
+      "penugasan_id,periode_id,departemen_id,departemen,departemen_jenis,departemen_urutan,member_id,nama,member_jenis,foto_url,jabatan,utama,urutan,instagram,tiktok,moto,periode_nama",
     )
     .eq("periode_id", aktif.id)
     .order("departemen_urutan", { ascending: true })

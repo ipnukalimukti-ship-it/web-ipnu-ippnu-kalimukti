@@ -5,6 +5,7 @@ import { useAdmin } from "@/components/admin/AdminShell";
 import { Halaman, Notif, type Pesan } from "@/components/admin/ui";
 import { bisa, hapusFoto, pesanError, unggahFoto } from "@/lib/admin-util";
 import { inisial, tanggal } from "@/lib/format";
+import { JENJANG_KADERISASI } from "@/lib/kaderisasi";
 import { bacaUsername } from "@/lib/medsos";
 
 type Anggota = {
@@ -17,8 +18,12 @@ type Anggota = {
   no_hp: string | null;
   alamat: string | null;
   catatan: string | null;
-  bio: string | null;
-  prestasi: string | null;
+  moto: string | null;
+  kesan: string | null;
+  pesan: string | null;
+  hobi: string | null;
+  cita_cita: string | null;
+  kaderisasi: string[] | null;
   instagram: string | null;
   tiktok: string | null;
   tampil_medsos: boolean;
@@ -37,8 +42,12 @@ type Form = {
   no_hp: string;
   alamat: string;
   catatan: string;
-  bio: string;
-  prestasi: string;
+  moto: string;
+  kesan: string;
+  pesan: string;
+  hobi: string;
+  cita_cita: string;
+  kaderisasi: string[];
   instagram: string;
   tiktok: string;
   tampil_medsos: boolean;
@@ -56,8 +65,12 @@ const kosong = (): Form => ({
   no_hp: "",
   alamat: "",
   catatan: "",
-  bio: "",
-  prestasi: "",
+  moto: "",
+  kesan: "",
+  pesan: "",
+  hobi: "",
+  cita_cita: "",
+  kaderisasi: [],
   instagram: "",
   tiktok: "",
   tampil_medsos: false,
@@ -70,7 +83,7 @@ export default function AdminAnggota() {
     <Halaman
       judul="Anggota"
       peran={["sekretaris", "bendahara"]}
-      deskripsi="Data anggota. Yang tampil di website: nama, tempat tanggal lahir, foto, bio, prestasi, dan (kalau dinyalakan) Instagram dan TikTok. Nomor HP, alamat, dan catatan hanya terlihat oleh pengurus."
+      deskripsi="Data anggota. Yang tampil di website: nama, tempat tanggal lahir, foto, moto, kesan, pesan, hobi, cita-cita, jenjang kaderisasi, dan (kalau dinyalakan) Instagram dan TikTok. Nomor HP, alamat, dan catatan hanya terlihat oleh pengurus."
     >
       <Isi />
     </Halaman>
@@ -91,7 +104,7 @@ function Isi() {
   const muat = useCallback(async () => {
     const { data, error } = await db
       .from("members")
-      .select("id,nama,jenis,tempat_lahir,tanggal_lahir,foto_url,no_hp,alamat,catatan,bio,prestasi,instagram,tiktok,tampil_medsos,tampil_publik,aktif")
+      .select("id,nama,jenis,tempat_lahir,tanggal_lahir,foto_url,no_hp,alamat,catatan,moto,kesan,pesan,hobi,cita_cita,kaderisasi,instagram,tiktok,tampil_medsos,tampil_publik,aktif")
       .order("nama");
     if (error) setPesan({ t: "err", teks: pesanError(error) });
     else setDaftar((data ?? []) as Anggota[]);
@@ -126,8 +139,12 @@ function Isi() {
       no_hp: a.no_hp ?? "",
       alamat: a.alamat ?? "",
       catatan: a.catatan ?? "",
-      bio: a.bio ?? "",
-      prestasi: a.prestasi ?? "",
+      moto: a.moto ?? "",
+      kesan: a.kesan ?? "",
+      pesan: a.pesan ?? "",
+      hobi: a.hobi ?? "",
+      cita_cita: a.cita_cita ?? "",
+      kaderisasi: a.kaderisasi ?? [],
       instagram: a.instagram ?? "",
       tiktok: a.tiktok ?? "",
       tampil_medsos: a.tampil_medsos,
@@ -166,8 +183,12 @@ function Isi() {
         no_hp: form.no_hp.trim() || null,
         alamat: form.alamat.trim() || null,
         catatan: form.catatan.trim() || null,
-        bio: form.bio.trim() || null,
-        prestasi: form.prestasi.trim() || null,
+        moto: form.moto.trim() || null,
+        kesan: form.kesan.trim() || null,
+        pesan: form.pesan.trim() || null,
+        hobi: form.hobi.trim() || null,
+        cita_cita: form.cita_cita.trim() || null,
+        kaderisasi: form.kaderisasi.length > 0 ? form.kaderisasi : null,
         instagram: bacaUsername(form.instagram, "instagram"),
         tiktok: bacaUsername(form.tiktok, "tiktok"),
         tampil_medsos: form.tampil_medsos,
@@ -268,17 +289,53 @@ function Isi() {
             <input id="catatan" maxLength={200} value={form.catatan} onChange={(e) => ubah("catatan", e.target.value)} />
           </div>
 
-          <h3 className="adm-sub">Profil di website (kartu detail anggota)</h3>
+          <h3 className="adm-sub">Profil di website (belakang kartu anggota)</h3>
           <div className="adm-field">
-            <label htmlFor="bio">Bio singkat</label>
-            <textarea id="bio" rows={3} maxLength={400} style={{ minHeight: 90 }} value={form.bio} onChange={(e) => ubah("bio", e.target.value)} />
-            <span className="adm-bantu">Dua atau tiga kalimat saja. Tampil di website.</span>
+            <label htmlFor="moto">Moto</label>
+            <input id="moto" maxLength={120} placeholder="Satu kalimat" value={form.moto} onChange={(e) => ubah("moto", e.target.value)} />
           </div>
           <div className="adm-field">
-            <label htmlFor="prestasi">Prestasi dan kegiatan</label>
-            <textarea id="prestasi" rows={4} maxLength={1000} style={{ minHeight: 110 }} value={form.prestasi} onChange={(e) => ubah("prestasi", e.target.value)} />
-            <span className="adm-bantu">Satu poin per baris. Contoh: Juara 1 lomba hadroh tingkat kecamatan 2025</span>
+            <label htmlFor="kesan">Kesan</label>
+            <textarea id="kesan" rows={3} maxLength={300} style={{ minHeight: 90 }} value={form.kesan} onChange={(e) => ubah("kesan", e.target.value)} />
+            <span className="adm-bantu">Kesan selama menjadi anggota. Maksimal 300 huruf.</span>
           </div>
+          <div className="adm-field">
+            <label htmlFor="pesan">Pesan</label>
+            <textarea id="pesan" rows={3} maxLength={300} style={{ minHeight: 90 }} value={form.pesan} onChange={(e) => ubah("pesan", e.target.value)} />
+            <span className="adm-bantu">Pesan untuk sesama anggota. Maksimal 300 huruf.</span>
+          </div>
+          <div className="adm-baris">
+            <div className="adm-field">
+              <label htmlFor="hobi">Hobi</label>
+              <input id="hobi" maxLength={100} value={form.hobi} onChange={(e) => ubah("hobi", e.target.value)} />
+            </div>
+            <div className="adm-field">
+              <label htmlFor="cita">Cita-cita</label>
+              <input id="cita" maxLength={100} value={form.cita_cita} onChange={(e) => ubah("cita_cita", e.target.value)} />
+            </div>
+          </div>
+          <fieldset className="adm-field" style={{ border: 0, padding: 0, margin: 0 }}>
+            <legend style={{ fontWeight: 700, padding: 0, marginBottom: 6 }}>Jenjang kaderisasi yang sudah diikuti</legend>
+            <div className="adm-aksi">
+              {JENJANG_KADERISASI.map((j) => (
+                <label className="adm-centang" key={j}>
+                  <input
+                    type="checkbox"
+                    checked={form.kaderisasi.includes(j)}
+                    onChange={(e) =>
+                      ubah("kaderisasi", e.target.checked ? [...form.kaderisasi, j] : form.kaderisasi.filter((x) => x !== j))
+                    }
+                  />
+                  {j}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <p className="adm-bantu" style={{ margin: 0 }}>
+            Riwayat kepengurusan tampil otomatis dari menu Struktur, tidak perlu diisi di sini. Isi kesan dan pesan
+            sebaiknya atas permintaan anggotanya sendiri.
+          </p>
+
           <div className="adm-baris">
             <div className="adm-field">
               <label htmlFor="ig">Instagram</label>

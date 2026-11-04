@@ -5,19 +5,22 @@ import Carousel from "@/components/Carousel";
 import NewsCard from "@/components/NewsCard";
 import MemberCard from "@/components/MemberCard";
 import { LogoIpnu, LogoIppnu } from "@/components/Logo";
-import { getKasSummary, getMembers, getNews, getUpcomingEvents } from "@/lib/data";
+import { getKasSummary, getMembers, getNews, getRiwayat, getUpcomingEvents } from "@/lib/data";
+import { ulangTahunBulanIni } from "@/lib/ulangtahun";
 import { rupiah, tanggal } from "@/lib/format";
 
 export const revalidate = 60;
 
 export default async function Beranda() {
-  const [kas, berita, agenda, anggota] = await Promise.all([
+  const [kas, berita, agenda, anggota, riwayat] = await Promise.all([
     getKasSummary(),
     getNews(8),
     getUpcomingEvents(3),
     getMembers(),
+    getRiwayat(),
   ]);
   const berikutnya = agenda[0];
+  const ulangTahun = ulangTahunBulanIni(anggota);
 
   return (
     <>
@@ -40,6 +43,9 @@ export default async function Beranda() {
             <div className="px-aksi">
               <Link href="/agenda" className="px-pil px-pil-kuning">
                 Lihat agenda
+              </Link>
+              <Link href="/daftar" className="px-pil px-pil-garis">
+                Daftar jadi anggota
               </Link>
               <Link href="/berita" className="px-kotak-panah" aria-label="Baca berita terbaru">
                 <span aria-hidden="true">→</span>
@@ -118,12 +124,42 @@ export default async function Beranda() {
           ) : (
             <Carousel judul="Daftar anggota" tautan={{ href: "/anggota", label: "Semua anggota" }}>
               {anggota.slice(0, 12).map((m) => (
-                <MemberCard key={m.id} m={m} />
+                <MemberCard key={m.id} m={m} riwayat={riwayat[m.id]} />
               ))}
             </Carousel>
           )}
         </div>
       </section>
+
+      {ulangTahun.daftar.length > 0 && (
+        <section className="px-seksi" aria-labelledby="ultah-judul">
+          <div className="wrap">
+            <div className="px-sek-kepala">
+              <h2 className="px-label" id="ultah-judul">
+                Ulang tahun bulan {ulangTahun.namaBulan}
+              </h2>
+              <span className="px-sek-garis" aria-hidden="true" />
+            </div>
+            <ul className="px-ultah">
+              {ulangTahun.daftar.slice(0, 12).map((u) => (
+                <li key={u.id} className={u.hariIni ? "hari-ini" : undefined}>
+                  <span className="px-ultah-tgl">
+                    <span className="angka">{u.hari}</span>
+                    <span>{ulangTahun.namaBulan.slice(0, 3)}</span>
+                  </span>
+                  <span className="px-ultah-nama">{u.nama}</span>
+                  {u.hariIni && <span className="px-ultah-tanda">Hari ini</span>}
+                </li>
+              ))}
+            </ul>
+            {ulangTahun.daftar.length > 12 && (
+              <p className="px-rincian" style={{ marginTop: 12 }}>
+                dan {ulangTahun.daftar.length - 12} anggota lainnya.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="px-seksi">
         <div className="wrap px-dua-kolom">

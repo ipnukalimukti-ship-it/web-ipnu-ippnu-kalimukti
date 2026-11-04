@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
 import { LogoIpnu, LogoIppnu } from "@/components/Logo";
+import TombolPasang from "@/components/TombolPasang";
 import { isDemo } from "@/lib/supabase";
 
 export default function PublikLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +35,11 @@ export default function PublikLayout({ children }: { children: React.ReactNode }
               <li><Link href="/kas">Transparansi kas</Link></li>
               <li><Link href="/agenda">Agenda</Link></li>
               <li><Link href="/galeri">Galeri</Link></li>
+              <li><Link href="/daftar">Daftar jadi anggota</Link></li>
             </ul>
+          </div>
+          <div className="px-footer-pasang">
+            <TombolPasang />
           </div>
           <p className="px-footer-bawah">
             © {new Date().getFullYear()} IPNU IPPNU Ranting Kalimukti ·{" "}

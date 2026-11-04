@@ -3,7 +3,7 @@ import Link from "next/link";
 import MemberCard from "@/components/MemberCard";
 import PageHead from "@/components/PageHead";
 import { LogoIpnu, LogoIppnu } from "@/components/Logo";
-import { getMembers } from "@/lib/data";
+import { getMembers, getRiwayat } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Anggota" };
 
@@ -11,7 +11,7 @@ type Props = { searchParams: Promise<{ jenis?: string; q?: string }> };
 
 export default async function Anggota({ searchParams }: Props) {
   const { jenis, q } = await searchParams;
-  const anggota = await getMembers({ jenis, q });
+  const [anggota, riwayat] = await Promise.all([getMembers({ jenis, q }), getRiwayat()]);
   const aktif = jenis === "IPNU" || jenis === "IPPNU" ? jenis : "";
   const qs = (j: string) => {
     const p = new URLSearchParams();
@@ -56,7 +56,7 @@ export default async function Anggota({ searchParams }: Props) {
         ) : (
           <ul className="px-grid-anggota">
             {anggota.map((m) => (
-              <MemberCard key={m.id} m={m} />
+              <MemberCard key={m.id} m={m} riwayat={riwayat[m.id]} />
             ))}
           </ul>
         )}
