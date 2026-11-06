@@ -105,3 +105,21 @@ supabase/tambahan-pengelola.sql  peran pengelola dan catatan aktivitas (jalankan
 supabase/tambahan-struktur.sql  periode, departemen, dan jabatan pengurus (jalankan setelah tambahan-pengelola.sql, setelah website terbaru terpasang)
 supabase/tambahan-kartu.sql  isi kartu anggota (moto, kesan, pesan, hobi, cita-cita, kaderisasi) dan pendaftaran anggota online (jalankan setelah tambahan-struktur.sql, SEBELUM mengunggah versi website terbaru)
 ```
+
+## Gambar kartu yang bisa diunduh
+
+Di belakang kartu anggota dan kartu pengurus ada tombol **Unduh** (ukuran feed 1080 x 1350) dan tautan
+**Unduh ukuran story** (1080 x 1920). Gambarnya dibuat di server saat diminta:
+
+```
+/gambar/anggota/<id>?format=feed|story        (tambahkan &unduh=1 supaya langsung terunduh)
+/gambar/pengurus/<id>?format=feed|story
+```
+
+- Hanya anggota dan pengurus yang tampil di website yang bisa dibuatkan gambar. Yang disembunyikan menghasilkan 404.
+- Hasilnya disimpan sementara (cache): 10 menit di browser dan 1 hari di CDN.
+- Foto hanya diambil dari penyimpanan Supabase milik website ini. Foto berformat WebP diganti inisial.
+- Desainnya ada di satu berkas: `src/lib/gambar/kartu.tsx`. Pembuat gambarnya (Satori) hanya mengerti
+  sebagian CSS: pakai flexbox, tanpa grid. Untuk memakai desain kosongan sendiri, letakkan gambar latarnya
+  sebagai data URI dan atur posisi tiap elemen dengan `position: "absolute"`.
+- Font dan logo yang dipakai pembuat gambar tersimpan di `src/lib/gambar/aset.ts` (hasil olahan).

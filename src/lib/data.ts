@@ -37,6 +37,37 @@ export async function getMembers(opts: { jenis?: string; q?: string } = {}): Pro
   return (check(await query) as Member[] | null) ?? [];
 }
 
+/** Satu anggota yang tampil di website (untuk gambar kartu). Null kalau tidak ada atau disembunyikan. */
+export async function getAnggotaById(id: string): Promise<Member | null> {
+  const db = getSupabase();
+  if (!db) return sample.members.find((m) => m.id === id) ?? null;
+
+  const res = await db
+    .from("members_public")
+    .select("id,nama,tempat_lahir,tanggal_lahir,jenis,foto_url,moto,kesan,pesan,hobi,cita_cita,kaderisasi,instagram,tiktok")
+    .eq("id", id)
+    .limit(1);
+  return ((check(res) as Member[] | null) ?? [])[0] ?? null;
+}
+
+/** Satu penugasan pengurus yang tampil di website (untuk gambar kartu). */
+export async function getPenugasanById(id: string): Promise<Penugasan | null> {
+  const db = getSupabase();
+  if (!db) {
+    const semua = [...sample.struktur("per-2").baris, ...sample.struktur("per-1").baris];
+    return semua.find((b) => b.penugasan_id === id) ?? null;
+  }
+
+  const res = await db
+    .from("struktur_publik")
+    .select(
+      "penugasan_id,periode_id,departemen_id,departemen,departemen_jenis,departemen_urutan,member_id,nama,member_jenis,foto_url,jabatan,utama,urutan,instagram,tiktok,moto,periode_nama",
+    )
+    .eq("penugasan_id", id)
+    .limit(1);
+  return ((check(res) as Penugasan[] | null) ?? [])[0] ?? null;
+}
+
 /** Riwayat kepengurusan semua anggota yang tampil, dikelompokkan menurut id anggota (periode terbaru di atas). */
 export async function getRiwayat(): Promise<Record<string, Riwayat[]>> {
   const db = getSupabase();

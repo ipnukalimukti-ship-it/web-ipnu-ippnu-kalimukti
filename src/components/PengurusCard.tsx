@@ -84,6 +84,14 @@ export default function PengurusCard({ p, periode }: { p: Penugasan; periode: st
               <button type="button" ref={tombolBalik} className="px-balik" onClick={balik}>
                 <span aria-hidden="true">‹</span> Kembali
               </button>
+              <a
+                className="px-unduh"
+                href={`/gambar/pengurus/${p.penugasan_id}?unduh=1`}
+                download
+                aria-label={`Unduh gambar kartu ${p.nama}`}
+              >
+                <span aria-hidden="true">↓</span> Unduh
+              </a>
             </div>
 
             <p className="px-b-org">
@@ -114,6 +122,12 @@ export default function PengurusCard({ p, periode }: { p: Penugasan; periode: st
             ) : (
               <p className="px-b-kosong">Belum ada akun media sosial yang ditampilkan.</p>
             )}
+
+            <p className="px-unduh-story">
+              <a href={`/gambar/pengurus/${p.penugasan_id}?format=story&unduh=1`} download>
+                Unduh ukuran story
+              </a>
+            </p>
           </div>
         </div>
       </div>

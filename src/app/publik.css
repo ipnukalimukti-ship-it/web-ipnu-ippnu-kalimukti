@@ -2299,3 +2299,49 @@ html:has(.tema) body {
 .tema .px-pil-garis {
   background: transparent;
 }
+
+
+/* ----- Tombol unduh gambar di belakang kartu ----- */
+
+.tema .px-balik-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tema .px-unduh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--kuning-logo);
+  color: var(--tinta);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  transition: transform 0.18s ease;
+}
+
+.tema a.px-unduh:hover {
+  color: var(--tinta);
+  transform: translateY(-1px);
+}
+
+.tema .px-unduh-story {
+  margin: 20px 0 0;
+  font-size: 0.82rem;
+}
+
+.tema .px-unduh-story a {
+  color: var(--teks-2);
+  text-decoration: underline;
+  text-decoration-color: var(--kuning-logo);
+  text-underline-offset: 4px;
+}
+
+.tema .px-unduh-story a:hover {
+  color: var(--kuning-logo);
+}

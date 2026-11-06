@@ -113,6 +113,14 @@ export default function MemberCard({ m, riwayat = [] }: { m: Member; riwayat?: R
               <button type="button" ref={tombolBalik} className="px-balik" onClick={balik}>
                 <span aria-hidden="true">‹</span> Kembali
               </button>
+              <a
+                className="px-unduh"
+                href={`/gambar/anggota/${m.id}?unduh=1`}
+                download
+                aria-label={`Unduh gambar kartu ${m.nama}`}
+              >
+                <span aria-hidden="true">↓</span> Unduh
+              </a>
             </div>
 
             <p className="px-b-org">
@@ -183,6 +191,12 @@ export default function MemberCard({ m, riwayat = [] }: { m: Member; riwayat?: R
             )}
 
             {!adaIsi && <p className="px-b-kosong">Profil lengkap anggota ini belum diisi.</p>}
+
+            <p className="px-unduh-story">
+              <a href={`/gambar/anggota/${m.id}?format=story&unduh=1`} download>
+                Unduh ukuran story
+              </a>
+            </p>
           </div>
         </div>
       </div>
