@@ -104,6 +104,7 @@ supabase/tambahan-profil-pengurus.sql  bio, prestasi, medsos anggota, dan strukt
 supabase/tambahan-pengelola.sql  peran pengelola dan catatan aktivitas (jalankan setelah tambahan-profil-pengurus.sql, setelah website terbaru terpasang)
 supabase/tambahan-struktur.sql  periode, departemen, dan jabatan pengurus (jalankan setelah tambahan-pengelola.sql, setelah website terbaru terpasang)
 supabase/tambahan-kartu.sql  isi kartu anggota (moto, kesan, pesan, hobi, cita-cita, kaderisasi) dan pendaftaran anggota online (jalankan setelah tambahan-struktur.sql, SEBELUM mengunggah versi website terbaru)
+supabase/tambahan-pendaftaran.sql  formulir pendaftaran lengkap dengan unggah foto aman (jalankan setelah tambahan-kartu.sql, SEBELUM mengunggah versi website terbaru)
 ```
 
 ## Gambar kartu yang bisa diunduh
@@ -123,3 +124,21 @@ Di belakang kartu anggota dan kartu pengurus ada tombol **Unduh** (ukuran feed 1
   sebagian CSS: pakai flexbox, tanpa grid. Untuk memakai desain kosongan sendiri, letakkan gambar latarnya
   sebagai data URI dan atur posisi tiap elemen dengan `position: "absolute"`.
 - Font dan logo yang dipakai pembuat gambar tersimpan di `src/lib/gambar/aset.ts` (hasil olahan).
+
+## Pendaftaran anggota online
+
+Halaman `/daftar` memuat formulir yang mengikuti isi kartu anggota. Pendaftar tidak langsung menjadi anggota:
+pendaftaran masuk ke menu **Pendaftaran** di admin, lalu pengurus (sekretaris, admin, pengelola) memeriksa dan
+menyetujuinya. Saat disetujui, anggota dibuat dengan semua isian, dan foto disalin ke penyimpanan foto anggota.
+
+- Nomor HP, alamat, dan asal sekolah hanya terlihat oleh pengurus.
+- Profil tampil di website hanya kalau pendaftar mencentang izin. Medsos punya izin sendiri.
+- Foto diunggah ke penyimpanan pribadi `pendaftaran-foto` (JPEG, maksimal 1 MB, satu foto per pendaftaran),
+  hanya bisa diunggah setelah pendaftaran lolos pemeriksaan, dan hanya bisa dilihat pengurus.
+- Pengaman spam: isian jebakan untuk robot, pemeriksaan isian di database, pencegahan pendaftaran ganda,
+  dan batas 30 pendaftaran per jam.
+
+## Fitur yang dimatikan
+
+`src/lib/fitur.ts` berisi saklar `UNDUH_GAMBAR_AKTIF` (tombol unduh gambar kartu). Nilainya `false` sampai
+desain kosongan siap.

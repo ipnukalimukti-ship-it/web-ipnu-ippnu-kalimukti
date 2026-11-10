@@ -3,10 +3,12 @@ import { ambilFoto, bacaFormat, namaBerkas, responsGambar } from "@/lib/gambar/m
 import { getAnggotaById } from "@/lib/data";
 import { inisial } from "@/lib/format";
 import { jenjangValid } from "@/lib/kaderisasi";
+import { UNDUH_GAMBAR_AKTIF } from "@/lib/fitur";
 import { usernameAman } from "@/lib/medsos";
 
 // Gambar kartu anggota (PNG). Hanya anggota yang tampil di website yang bisa dibuatkan gambar.
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!UNDUH_GAMBAR_AKTIF) return new Response("Fitur ini belum aktif", { status: 404 });
   const { id } = await params;
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) return new Response("Kartu tidak ditemukan", { status: 404 });
 

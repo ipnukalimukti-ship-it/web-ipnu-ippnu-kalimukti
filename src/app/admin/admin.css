@@ -627,3 +627,37 @@
 .adm-rincian dd {
   margin: 1px 0 0;
 }
+
+/* Kartu pendaftar: foto di kiri, rincian di kanan */
+.adm-pendaftar {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.adm-pendaftar-foto {
+  display: grid;
+  place-items: center;
+  width: 120px;
+  height: 150px;
+  overflow: hidden;
+  border: 1px solid var(--garis);
+  border-radius: 12px;
+  background: var(--hijau-50);
+  color: var(--tinta-2);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.adm-pendaftar-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 560px) {
+  .adm-pendaftar {
+    grid-template-columns: 1fr;
+  }
+}

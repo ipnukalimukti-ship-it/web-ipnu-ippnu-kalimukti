@@ -2345,3 +2345,144 @@ html:has(.tema) body {
 .tema .px-unduh-story a:hover {
   color: var(--kuning-logo);
 }
+
+/* ==========================================================
+   Formulir pendaftaran lengkap dan pratinjau kartu
+   ========================================================== */
+
+.tema .px-daftar-tata {
+  display: grid;
+  grid-template-columns: minmax(0, 640px) 260px;
+  gap: 40px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .tema .px-daftar-tata {
+    grid-template-columns: minmax(0, 640px);
+  }
+  .tema .px-pratinjau {
+    display: none;
+  }
+}
+
+.tema .px-pratinjau {
+  position: sticky;
+  top: 96px;
+}
+
+.tema .px-pratinjau-judul {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--teks-2);
+}
+
+.tema .px-pratinjau .px-moto {
+  margin-top: 16px;
+}
+
+.tema .px-nama-statis {
+  display: block;
+  font-family: var(--font-judul);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tema .px-medsos-depan span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.tema .px-form-bagian {
+  margin: 10px 0 -6px;
+  padding-top: 18px;
+  border-top: 1px solid var(--garis);
+  font-size: 1.15rem;
+}
+
+.tema .px-form-bagian span {
+  font-family: var(--font-isi);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--teks-2);
+}
+
+.tema .px-bantu {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--teks-2);
+}
+
+.tema .px-label-isian {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.tema .px-foto-unggah {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.tema .px-foto-unggah img,
+.tema .px-foto-unggah-kosong {
+  flex: none;
+  width: 110px;
+  height: 138px;
+  border: 1px solid var(--garis);
+  border-radius: 18px;
+  object-fit: cover;
+  background: var(--kartu);
+}
+
+.tema .px-foto-unggah-kosong {
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  color: var(--teks-2);
+}
+
+.tema .px-pilih-file {
+  position: relative;
+  cursor: pointer;
+}
+
+.tema .px-pilih-file input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tema .px-tautan-hapus {
+  margin-left: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--teks-2);
+  font: inherit;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tema .px-setuju-utama {
+  padding: 14px 16px;
+  border: 1px solid var(--garis);
+  border-radius: 14px;
+  background: var(--kartu);
+}
+
+.tema .px-setuju input:disabled + span {
+  opacity: 0.5;
+}

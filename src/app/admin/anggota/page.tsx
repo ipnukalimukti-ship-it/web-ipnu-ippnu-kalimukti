@@ -18,6 +18,7 @@ type Anggota = {
   no_hp: string | null;
   alamat: string | null;
   catatan: string | null;
+  sekolah: string | null;
   moto: string | null;
   kesan: string | null;
   pesan: string | null;
@@ -42,6 +43,7 @@ type Form = {
   no_hp: string;
   alamat: string;
   catatan: string;
+  sekolah: string;
   moto: string;
   kesan: string;
   pesan: string;
@@ -65,6 +67,7 @@ const kosong = (): Form => ({
   no_hp: "",
   alamat: "",
   catatan: "",
+  sekolah: "",
   moto: "",
   kesan: "",
   pesan: "",
@@ -83,7 +86,7 @@ export default function AdminAnggota() {
     <Halaman
       judul="Anggota"
       peran={["sekretaris", "bendahara"]}
-      deskripsi="Data anggota. Yang tampil di website: nama, tempat tanggal lahir, foto, moto, kesan, pesan, hobi, cita-cita, jenjang kaderisasi, dan (kalau dinyalakan) Instagram dan TikTok. Nomor HP, alamat, dan catatan hanya terlihat oleh pengurus."
+      deskripsi="Data anggota. Yang tampil di website: nama, tempat tanggal lahir, foto, moto, kesan, pesan, hobi, cita-cita, jenjang kaderisasi, dan (kalau dinyalakan) Instagram dan TikTok. Nomor HP, alamat, asal sekolah, dan catatan hanya terlihat oleh pengurus."
     >
       <Isi />
     </Halaman>
@@ -104,7 +107,7 @@ function Isi() {
   const muat = useCallback(async () => {
     const { data, error } = await db
       .from("members")
-      .select("id,nama,jenis,tempat_lahir,tanggal_lahir,foto_url,no_hp,alamat,catatan,moto,kesan,pesan,hobi,cita_cita,kaderisasi,instagram,tiktok,tampil_medsos,tampil_publik,aktif")
+      .select("id,nama,jenis,tempat_lahir,tanggal_lahir,foto_url,no_hp,alamat,sekolah,catatan,moto,kesan,pesan,hobi,cita_cita,kaderisasi,instagram,tiktok,tampil_medsos,tampil_publik,aktif")
       .order("nama");
     if (error) setPesan({ t: "err", teks: pesanError(error) });
     else setDaftar((data ?? []) as Anggota[]);
@@ -139,6 +142,7 @@ function Isi() {
       no_hp: a.no_hp ?? "",
       alamat: a.alamat ?? "",
       catatan: a.catatan ?? "",
+      sekolah: a.sekolah ?? "",
       moto: a.moto ?? "",
       kesan: a.kesan ?? "",
       pesan: a.pesan ?? "",
@@ -183,6 +187,7 @@ function Isi() {
         no_hp: form.no_hp.trim() || null,
         alamat: form.alamat.trim() || null,
         catatan: form.catatan.trim() || null,
+        sekolah: form.sekolah.trim() || null,
         moto: form.moto.trim() || null,
         kesan: form.kesan.trim() || null,
         pesan: form.pesan.trim() || null,
@@ -283,6 +288,10 @@ function Isi() {
               <label htmlFor="alamat">Alamat (hanya pengurus)</label>
               <input id="alamat" maxLength={200} value={form.alamat} onChange={(e) => ubah("alamat", e.target.value)} />
             </div>
+          </div>
+          <div className="adm-field">
+            <label htmlFor="sekolah">Asal sekolah dan kelas (hanya pengurus)</label>
+            <input id="sekolah" maxLength={120} placeholder="Contoh: SMAN 1 Kuningan, kelas XI" value={form.sekolah} onChange={(e) => ubah("sekolah", e.target.value)} />
           </div>
           <div className="adm-field">
             <label htmlFor="catatan">Catatan (hanya pengurus)</label>

@@ -15,10 +15,24 @@ type Daftar = {
   tanggal_lahir: string;
   no_hp: string;
   alamat: string | null;
+  sekolah: string | null;
+  moto: string | null;
+  kesan: string | null;
+  pesan: string | null;
+  hobi: string | null;
+  cita_cita: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  izin_profil: boolean;
+  izin_medsos: boolean;
+  foto_path: string | null;
   status: Status;
   alasan_tolak: string | null;
 };
 type Penyaring = Status | "semua";
+
+const KOLOM =
+  "id,created_at,nama,jenis,tempat_lahir,tanggal_lahir,no_hp,alamat,sekolah,moto,kesan,pesan,hobi,cita_cita,instagram,tiktok,izin_profil,izin_medsos,foto_path,status,alasan_tolak";
 
 const LABEL: Record<Penyaring, string> = {
   baru: "Baru",
@@ -67,7 +81,7 @@ export default function AdminPendaftaran() {
     <Halaman
       judul="Pendaftaran anggota"
       peran={["sekretaris"]}
-      deskripsi="Pendaftaran dari formulir di website. Menyetujui akan membuat anggota baru yang BELUM tampil di website, sampai Anda menyalakannya di menu Anggota. Nomor HP dan alamat hanya terlihat oleh pengurus."
+      deskripsi="Pendaftaran dari formulir di website. Periksa isinya dulu, lalu Setujui untuk menjadikannya anggota (semua isian dan fotonya ikut terbawa). Nomor HP, alamat, dan asal sekolah hanya terlihat oleh pengurus."
     >
       <Isi />
     </Halaman>
@@ -77,6 +91,7 @@ export default function AdminPendaftaran() {
 function Isi() {
   const { db } = useAdmin();
   const [data, setData] = useState<Daftar[] | null>(null);
+  const [foto, setFoto] = useState<Record<string, string>>({});
   const [anggota, setAnggota] = useState<{ nama: string; jenis: string }[]>([]);
   const [saring, setSaring] = useState<Penyaring>("baru");
   const [pesan, setPesan] = useState<Pesan>(null);
@@ -84,19 +99,29 @@ function Isi() {
 
   const muat = useCallback(async () => {
     const [d, a] = await Promise.all([
-      db
-        .from("pendaftaran")
-        .select("id,created_at,nama,jenis,tempat_lahir,tanggal_lahir,no_hp,alamat,status,alasan_tolak")
-        .order("created_at", { ascending: false })
-        .limit(300),
+      db.from("pendaftaran").select(KOLOM).order("created_at", { ascending: false }).limit(300),
       db.from("members").select("nama,jenis"),
     ]);
     if (d.error) {
       setPesan({ t: "err", teks: pesanError(d.error) });
       return;
     }
-    setData((d.data ?? []) as Daftar[]);
+    const daftar = (d.data ?? []) as Daftar[];
+    setData(daftar);
     setAnggota((a.data ?? []) as { nama: string; jenis: string }[]);
+
+    // Alamat sementara untuk melihat foto di penyimpanan pribadi (berlaku 15 menit).
+    const jalur = daftar.filter((x) => x.foto_path).map((x) => x.foto_path as string);
+    if (jalur.length > 0) {
+      const s = await db.storage.from("pendaftaran-foto").createSignedUrls(jalur, 900);
+      const peta: Record<string, string> = {};
+      for (const baris of s.data ?? []) {
+        if (baris.path && baris.signedUrl) peta[baris.path] = baris.signedUrl;
+      }
+      setFoto(peta);
+    } else {
+      setFoto({});
+    }
   }, [db]);
 
   useEffect(() => {
@@ -111,33 +136,92 @@ function Isi() {
   const jumlah = (s: Penyaring) => (data ?? []).filter((d) => s === "semua" || d.status === s).length;
   const tampil = (data ?? []).filter((d) => saring === "semua" || d.status === saring);
 
-  async function kerjakan(id: string, aksi: () => PromiseLike<{ error: unknown }>, sukses: string) {
-    setSibuk(id);
+  /** Hapus foto di penyimpanan pribadi dan kosongkan penunjuknya. Gagal pun tidak mengganggu. */
+  async function bersihkanFoto(d: Daftar) {
+    if (!d.foto_path) return;
+    try {
+      await db.storage.from("pendaftaran-foto").remove([d.foto_path]);
+      await db.from("pendaftaran").update({ foto_path: null }).eq("id", d.id);
+    } catch {
+      /* berkas yatim tidak merusak apa pun */
+    }
+  }
+
+  async function setujui(d: Daftar) {
+    const tampilWeb = d.izin_profil
+      ? "Profilnya akan TAMPIL di website (pendaftar mencentang izin)."
+      : "Profilnya TIDAK tampil di website (pendaftar tidak mencentang izin). Anda bisa mengubahnya nanti di menu Anggota.";
+    const medsos =
+      d.izin_medsos && (d.instagram || d.tiktok)
+        ? " Instagram dan TikTok ikut tampil."
+        : d.instagram || d.tiktok
+          ? " Instagram dan TikTok tidak tampil."
+          : "";
+    if (!window.confirm(`Setujui ${d.nama} dan jadikan anggota ${d.jenis}?\n\n${tampilWeb}${medsos}`)) return;
+
+    setSibuk(d.id);
     setPesan(null);
-    const { error } = await aksi();
-    setSibuk(null);
-    if (error) {
-      setPesan({ t: "err", teks: pesanError(error) });
+    const r = await db.rpc("setujui_pendaftaran", { p_id: d.id });
+    if (r.error) {
+      setSibuk(null);
+      setPesan({ t: "err", teks: pesanError(r.error) });
       return;
     }
-    setPesan({ t: "ok", teks: sukses });
+    const memberId = r.data as string;
+
+    // Salin foto dari penyimpanan pribadi ke penyimpanan foto anggota.
+    let catatan = "";
+    if (d.foto_path) {
+      try {
+        const dl = await db.storage.from("pendaftaran-foto").download(d.foto_path);
+        if (dl.error || !dl.data) throw dl.error ?? new Error("Foto kosong");
+        const path = `anggota/${crypto.randomUUID()}.jpg`;
+        const up = await db.storage.from("media").upload(path, dl.data, { contentType: "image/jpeg" });
+        if (up.error) throw up.error;
+        const url = db.storage.from("media").getPublicUrl(path).data.publicUrl;
+        const upd = await db.from("members").update({ foto_url: url }).eq("id", memberId);
+        if (upd.error) throw upd.error;
+        await bersihkanFoto(d);
+      } catch {
+        catatan = " Fotonya belum berhasil disalin, tambahkan lewat menu Anggota.";
+      }
+    }
+
+    setSibuk(null);
+    setPesan({ t: "ok", teks: `${d.nama} sekarang menjadi anggota. Periksa datanya di menu Anggota.${catatan}` });
     await muat();
   }
 
-  function setujui(d: Daftar) {
-    if (!window.confirm(`Setujui ${d.nama} dan jadikan anggota ${d.jenis}? Anggota baru belum tampil di website sampai Anda mengubahnya di menu Anggota.`)) return;
-    kerjakan(d.id, () => db.rpc("setujui_pendaftaran", { p_id: d.id }), `${d.nama} sekarang menjadi anggota. Lengkapi datanya di menu Anggota.`);
-  }
-
-  function tolak(d: Daftar) {
+  async function tolak(d: Daftar) {
     const alasan = window.prompt(`Tolak pendaftaran ${d.nama}? Tulis alasan (boleh dikosongkan, hanya dilihat pengurus):`, "");
     if (alasan === null) return;
-    kerjakan(d.id, () => db.rpc("tolak_pendaftaran", { p_id: d.id, p_alasan: alasan }), "Pendaftaran ditolak.");
+    setSibuk(d.id);
+    setPesan(null);
+    const r = await db.rpc("tolak_pendaftaran", { p_id: d.id, p_alasan: alasan });
+    if (r.error) {
+      setSibuk(null);
+      setPesan({ t: "err", teks: pesanError(r.error) });
+      return;
+    }
+    await bersihkanFoto(d);
+    setSibuk(null);
+    setPesan({ t: "ok", teks: "Pendaftaran ditolak." });
+    await muat();
   }
 
-  function hapus(d: Daftar) {
+  async function hapus(d: Daftar) {
     if (!window.confirm(`Hapus catatan pendaftaran ${d.nama}? Data anggota (kalau sudah disetujui) tidak ikut terhapus.`)) return;
-    kerjakan(d.id, () => db.from("pendaftaran").delete().eq("id", d.id), "Catatan pendaftaran dihapus.");
+    setSibuk(d.id);
+    setPesan(null);
+    await bersihkanFoto(d);
+    const r = await db.from("pendaftaran").delete().eq("id", d.id);
+    setSibuk(null);
+    if (r.error) {
+      setPesan({ t: "err", teks: pesanError(r.error) });
+      return;
+    }
+    setPesan({ t: "ok", teks: "Catatan pendaftaran dihapus." });
+    await muat();
   }
 
   return (
@@ -174,42 +258,84 @@ function Isi() {
       ) : (
         tampil.map((d) => {
           const ganda = d.status === "baru" && sudahAda.has(`${d.nama.trim().toLowerCase()}|${d.jenis}`);
+          const urlFoto = d.foto_path ? foto[d.foto_path] : undefined;
+          const adaProfil = Boolean(d.moto || d.kesan || d.pesan || d.hobi || d.cita_cita || d.instagram || d.tiktok);
           return (
-            <section className="adm-kartu" key={d.id} aria-label={`Pendaftaran ${d.nama}`}>
-              <div className="adm-aksi" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <h2 style={{ margin: 0 }}>
-                    {d.nama}{" "}
-                    <span className={d.jenis === "IPNU" ? "adm-lencana" : "adm-lencana kuning"}>{d.jenis}</span>{" "}
-                    {d.status === "disetujui" && <span className="adm-lencana">Disetujui</span>}
-                    {d.status === "ditolak" && <span className="adm-lencana merah">Ditolak</span>}
-                    {ganda && <span className="adm-lencana merah" title="Sudah ada anggota dengan nama dan organisasi yang sama.">Mungkin sudah terdaftar</span>}
-                  </h2>
-                  <p className="adm-bantu" style={{ margin: "4px 0 0" }}>Masuk {waktuWib(d.created_at)} WIB</p>
-                </div>
+            <section className="adm-kartu adm-pendaftar" key={d.id} aria-label={`Pendaftaran ${d.nama}`}>
+              <div className="adm-pendaftar-foto">
+                {urlFoto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={urlFoto} alt={`Foto ${d.nama}`} />
+                ) : (
+                  <span>{d.foto_path ? "Memuat foto…" : "Tanpa foto"}</span>
+                )}
               </div>
 
-              <dl className="adm-rincian">
-                <div><dt>Tempat, tanggal lahir</dt><dd>{[d.tempat_lahir, tanggalPanjang(d.tanggal_lahir)].filter(Boolean).join(", ")} ({umur(d.tanggal_lahir)} tahun)</dd></div>
-                <div>
-                  <dt>HP / WhatsApp</dt>
-                  <dd>
-                    {d.no_hp}{" "}
-                    <a href={`https://wa.me/${nomorWa(d.no_hp)}`} target="_blank" rel="noopener noreferrer">Buka WhatsApp</a>
-                  </dd>
-                </div>
-                {d.alamat && <div><dt>Alamat</dt><dd>{d.alamat}</dd></div>}
-                {d.alasan_tolak && <div><dt>Alasan penolakan</dt><dd>{d.alasan_tolak}</dd></div>}
-              </dl>
+              <div>
+                <h2 style={{ margin: 0 }}>
+                  {d.nama}{" "}
+                  <span className={d.jenis === "IPNU" ? "adm-lencana" : "adm-lencana kuning"}>{d.jenis}</span>{" "}
+                  {d.status === "disetujui" && <span className="adm-lencana">Disetujui</span>}
+                  {d.status === "ditolak" && <span className="adm-lencana merah">Ditolak</span>}
+                  {ganda && <span className="adm-lencana merah" title="Sudah ada anggota dengan nama dan organisasi yang sama.">Mungkin sudah terdaftar</span>}
+                </h2>
+                <p className="adm-bantu" style={{ margin: "4px 0 0" }}>Masuk {waktuWib(d.created_at)} WIB</p>
 
-              <div className="adm-aksi">
-                {d.status === "baru" && (
+                <dl className="adm-rincian">
+                  <div><dt>Tempat, tanggal lahir</dt><dd>{[d.tempat_lahir, tanggalPanjang(d.tanggal_lahir)].filter(Boolean).join(", ")} ({umur(d.tanggal_lahir)} tahun)</dd></div>
+                  <div>
+                    <dt>HP / WhatsApp (hanya pengurus)</dt>
+                    <dd>
+                      {d.no_hp}{" "}
+                      <a href={`https://wa.me/${nomorWa(d.no_hp)}`} target="_blank" rel="noopener noreferrer">Buka WhatsApp</a>
+                    </dd>
+                  </div>
+                  {d.sekolah && <div><dt>Asal sekolah dan kelas (hanya pengurus)</dt><dd>{d.sekolah}</dd></div>}
+                  {d.alamat && <div><dt>Alamat (hanya pengurus)</dt><dd>{d.alamat}</dd></div>}
+                </dl>
+
+                {adaProfil && (
                   <>
-                    <button className="adm-btn adm-btn-utama adm-btn-kecil" onClick={() => setujui(d)} disabled={sibuk === d.id}>Setujui</button>
-                    <button className="adm-btn adm-btn-kecil" onClick={() => tolak(d)} disabled={sibuk === d.id}>Tolak</button>
+                    <h3 className="adm-sub">Profil untuk kartu</h3>
+                    <dl className="adm-rincian">
+                      {d.moto && <div><dt>Moto</dt><dd>&ldquo;{d.moto}&rdquo;</dd></div>}
+                      {d.kesan && <div><dt>Kesan</dt><dd>{d.kesan}</dd></div>}
+                      {d.pesan && <div><dt>Pesan</dt><dd>{d.pesan}</dd></div>}
+                      {d.hobi && <div><dt>Hobi</dt><dd>{d.hobi}</dd></div>}
+                      {d.cita_cita && <div><dt>Cita-cita</dt><dd>{d.cita_cita}</dd></div>}
+                      {(d.instagram || d.tiktok) && (
+                        <div>
+                          <dt>Media sosial</dt>
+                          <dd>{[d.instagram && `Instagram @${d.instagram}`, d.tiktok && `TikTok @${d.tiktok}`].filter(Boolean).join(", ")}</dd>
+                        </div>
+                      )}
+                    </dl>
                   </>
                 )}
-                <button className="adm-btn adm-btn-kecil adm-btn-bahaya" onClick={() => hapus(d)} disabled={sibuk === d.id}>Hapus catatan</button>
+
+                <p style={{ margin: "10px 0" }}>
+                  <span className={d.izin_profil ? "adm-lencana" : "adm-lencana abu"}>
+                    {d.izin_profil ? "Izin tampil di website: ya" : "Izin tampil di website: tidak"}
+                  </span>{" "}
+                  {(d.instagram || d.tiktok) && (
+                    <span className={d.izin_medsos ? "adm-lencana" : "adm-lencana abu"}>
+                      {d.izin_medsos ? "Izin medsos tampil: ya" : "Izin medsos tampil: tidak"}
+                    </span>
+                  )}
+                </p>
+                {d.alasan_tolak && <p className="adm-bantu">Alasan penolakan: {d.alasan_tolak}</p>}
+
+                <div className="adm-aksi">
+                  {d.status === "baru" && (
+                    <>
+                      <button className="adm-btn adm-btn-utama adm-btn-kecil" onClick={() => setujui(d)} disabled={sibuk === d.id}>
+                        {sibuk === d.id ? "Memproses…" : "Setujui"}
+                      </button>
+                      <button className="adm-btn adm-btn-kecil" onClick={() => tolak(d)} disabled={sibuk === d.id}>Tolak</button>
+                    </>
+                  )}
+                  <button className="adm-btn adm-btn-kecil adm-btn-bahaya" onClick={() => hapus(d)} disabled={sibuk === d.id}>Hapus catatan</button>
+                </div>
               </div>
             </section>
           );
