@@ -2486,3 +2486,18 @@ html:has(.tema) body {
 .tema .px-setuju input:disabled + span {
   opacity: 0.5;
 }
+
+
+.tema .px-setuju-kecil {
+  margin-top: 6px;
+  font-size: 0.88rem;
+}
+
+.tema .px-kader {
+  display: grid;
+  gap: 2px;
+}
+
+.tema .px-kader legend {
+  margin-bottom: 4px;
+}

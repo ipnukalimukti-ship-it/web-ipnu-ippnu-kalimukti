@@ -26,13 +26,15 @@ type Daftar = {
   izin_profil: boolean;
   izin_medsos: boolean;
   foto_path: string | null;
+  kaderisasi: string[] | null;
+  belum_kaderisasi: boolean;
   status: Status;
   alasan_tolak: string | null;
 };
 type Penyaring = Status | "semua";
 
 const KOLOM =
-  "id,created_at,nama,jenis,tempat_lahir,tanggal_lahir,no_hp,alamat,sekolah,moto,kesan,pesan,hobi,cita_cita,instagram,tiktok,izin_profil,izin_medsos,foto_path,status,alasan_tolak";
+  "id,created_at,nama,jenis,tempat_lahir,tanggal_lahir,no_hp,alamat,sekolah,moto,kesan,pesan,hobi,cita_cita,instagram,tiktok,izin_profil,izin_medsos,foto_path,kaderisasi,belum_kaderisasi,status,alasan_tolak";
 
 const LABEL: Record<Penyaring, string> = {
   baru: "Baru",
@@ -157,7 +159,8 @@ function Isi() {
         : d.instagram || d.tiktok
           ? " Instagram dan TikTok tidak tampil."
           : "";
-    if (!window.confirm(`Setujui ${d.nama} dan jadikan anggota ${d.jenis}?\n\n${tampilWeb}${medsos}`)) return;
+    const kader = d.kaderisasi && d.kaderisasi.length > 0 ? ` Jenjang kaderisasi (${d.kaderisasi.join(", ")}) ikut tercatat, pastikan benar.` : "";
+    if (!window.confirm(`Setujui ${d.nama} dan jadikan anggota ${d.jenis}?\n\n${tampilWeb}${medsos}${kader}`)) return;
 
     setSibuk(d.id);
     setPesan(null);
@@ -277,6 +280,7 @@ function Isi() {
                   <span className={d.jenis === "IPNU" ? "adm-lencana" : "adm-lencana kuning"}>{d.jenis}</span>{" "}
                   {d.status === "disetujui" && <span className="adm-lencana">Disetujui</span>}
                   {d.status === "ditolak" && <span className="adm-lencana merah">Ditolak</span>}
+                  {d.status === "baru" && !d.foto_path && <span className="adm-lencana merah" title="Foto belum terunggah. Minta fotonya lewat nomor yang diisi.">Foto belum ada</span>}
                   {ganda && <span className="adm-lencana merah" title="Sudah ada anggota dengan nama dan organisasi yang sama.">Mungkin sudah terdaftar</span>}
                 </h2>
                 <p className="adm-bantu" style={{ margin: "4px 0 0" }}>Masuk {waktuWib(d.created_at)} WIB</p>
@@ -292,6 +296,10 @@ function Isi() {
                   </div>
                   {d.sekolah && <div><dt>Asal sekolah dan kelas (hanya pengurus)</dt><dd>{d.sekolah}</dd></div>}
                   {d.alamat && <div><dt>Alamat (hanya pengurus)</dt><dd>{d.alamat}</dd></div>}
+                  <div>
+                    <dt>Jenjang kaderisasi (pengakuan pendaftar, periksa kebenarannya)</dt>
+                    <dd>{d.kaderisasi && d.kaderisasi.length > 0 ? d.kaderisasi.join(", ") : d.belum_kaderisasi ? "Belum pernah mengikuti jenjang apa pun" : "-"}</dd>
+                  </div>
                 </dl>
 
                 {adaProfil && (

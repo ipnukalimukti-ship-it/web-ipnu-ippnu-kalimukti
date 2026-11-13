@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LogoIpnu, LogoIppnu } from "./Logo";
 import { inisial, tanggal as formatTanggal } from "@/lib/format";
 import { perkecilFoto } from "@/lib/foto";
+import { JENJANG_KADERISASI } from "@/lib/kaderisasi";
 import { bacaUsername } from "@/lib/medsos";
 import { getSupabase } from "@/lib/supabase";
 
@@ -30,6 +31,10 @@ export default function FormDaftar() {
   const [cita, setCita] = useState("");
   const [instagram, setInstagram] = useState("");
   const [tiktok, setTiktok] = useState("");
+  const [tanpaIg, setTanpaIg] = useState(false);
+  const [tanpaTt, setTanpaTt] = useState(false);
+  const [kader, setKader] = useState<string[]>([]);
+  const [belumKader, setBelumKader] = useState(false);
   const [foto, setFoto] = useState<Foto | null>(null);
   const [pesanFoto, setPesanFoto] = useState<string | null>(null);
   const [izinProfil, setIzinProfil] = useState(false);
@@ -70,11 +75,16 @@ export default function FormDaftar() {
 
     if (!jenis) return setPesan({ t: "err", teks: "Pilih IPNU atau IPPNU." });
 
+    if (!foto) return setPesan({ t: "err", teks: "Foto wajib dipasang. Pilih satu foto wajah Anda." });
+    if (kader.length === 0 && !belumKader) {
+      return setPesan({ t: "err", teks: "Pilih jenjang kaderisasi yang sudah diikuti, atau centang \"belum pernah\"." });
+    }
+
     let ig: string | null = null;
     let tt: string | null = null;
     try {
-      ig = bacaUsername(instagram, "instagram");
-      tt = bacaUsername(tiktok, "tiktok");
+      ig = tanpaIg ? null : bacaUsername(instagram, "instagram");
+      tt = tanpaTt ? null : bacaUsername(tiktok, "tiktok");
     } catch (err) {
       return setPesan({ t: "err", teks: err instanceof Error ? err.message : "Username tidak valid." });
     }
@@ -104,6 +114,10 @@ export default function FormDaftar() {
       p_cita_cita: cita,
       p_instagram: ig ?? "",
       p_tiktok: tt ?? "",
+      p_tanpa_instagram: tanpaIg,
+      p_tanpa_tiktok: tanpaTt,
+      p_kaderisasi: kader,
+      p_belum_kaderisasi: belumKader,
       p_izin_profil: izinProfil,
       p_izin_medsos: izinMedsos && Boolean(ig || tt),
       p_setuju: setuju,
@@ -203,7 +217,7 @@ export default function FormDaftar() {
         <div className="px-field-baris">
           <div className="px-field">
             <label htmlFor="d-tempat">Tempat lahir</label>
-            <input id="d-tempat" maxLength={80} value={tempat} onChange={(e) => setTempat(e.target.value)} />
+            <input id="d-tempat" required maxLength={80} value={tempat} onChange={(e) => setTempat(e.target.value)} />
           </div>
           <div className="px-field">
             <label htmlFor="d-tanggal">Tanggal lahir</label>
@@ -218,18 +232,18 @@ export default function FormDaftar() {
           <input id="d-hp" type="tel" inputMode="tel" required autoComplete="tel" placeholder="08xxxxxxxxxx" value={hp} onChange={(e) => setHp(e.target.value)} />
         </div>
         <div className="px-field">
-          <label htmlFor="d-sekolah">Asal sekolah dan kelas (boleh dikosongkan)</label>
-          <input id="d-sekolah" maxLength={120} placeholder="Contoh: SMAN 1 Kuningan, kelas XI" value={sekolah} onChange={(e) => setSekolah(e.target.value)} />
+          <label htmlFor="d-sekolah">Asal sekolah dan kelas</label>
+          <input id="d-sekolah" required maxLength={120} placeholder="Contoh: SMAN 1 Kuningan, kelas XI" value={sekolah} onChange={(e) => setSekolah(e.target.value)} />
         </div>
         <div className="px-field">
-          <label htmlFor="d-alamat">Alamat (boleh dikosongkan)</label>
-          <textarea id="d-alamat" rows={2} maxLength={300} value={alamat} onChange={(e) => setAlamat(e.target.value)} />
+          <label htmlFor="d-alamat">Alamat</label>
+          <textarea id="d-alamat" required rows={2} maxLength={300} value={alamat} onChange={(e) => setAlamat(e.target.value)} />
         </div>
 
-        <h2 className="px-form-bagian">Profil untuk kartu <span>(semua boleh dikosongkan)</span></h2>
+        <h2 className="px-form-bagian">Profil untuk kartu <span>(semua wajib diisi)</span></h2>
 
         <div className="px-field">
-          <span className="px-label-isian">Foto</span>
+          <span className="px-label-isian">Foto (wajib)</span>
           <div className="px-foto-unggah">
             {foto ? (
               <img src={foto.url} alt="Pratinjau foto Anda" />
@@ -254,38 +268,75 @@ export default function FormDaftar() {
 
         <div className="px-field">
           <label htmlFor="d-moto">Moto</label>
-          <input id="d-moto" maxLength={120} placeholder="Satu kalimat" value={moto} onChange={(e) => setMoto(e.target.value)} />
+          <input id="d-moto" required maxLength={120} placeholder="Satu kalimat" value={moto} onChange={(e) => setMoto(e.target.value)} />
         </div>
         <div className="px-field">
           <label htmlFor="d-kesan">Kesan</label>
-          <textarea id="d-kesan" rows={3} maxLength={300} value={kesan} onChange={(e) => setKesan(e.target.value)} />
+          <textarea id="d-kesan" required rows={3} maxLength={300} value={kesan} onChange={(e) => setKesan(e.target.value)} />
           <span className="px-bantu">Kesan Anda tentang IPNU atau IPPNU. Maksimal 300 huruf.</span>
         </div>
         <div className="px-field">
           <label htmlFor="d-pesan">Pesan</label>
-          <textarea id="d-pesan" rows={3} maxLength={300} value={pesanKartu} onChange={(e) => setPesanKartu(e.target.value)} />
+          <textarea id="d-pesan" required rows={3} maxLength={300} value={pesanKartu} onChange={(e) => setPesanKartu(e.target.value)} />
           <span className="px-bantu">Pesan untuk sesama anggota. Maksimal 300 huruf.</span>
         </div>
         <div className="px-field-baris">
           <div className="px-field">
             <label htmlFor="d-hobi">Hobi</label>
-            <input id="d-hobi" maxLength={100} value={hobi} onChange={(e) => setHobi(e.target.value)} />
+            <input id="d-hobi" required maxLength={100} value={hobi} onChange={(e) => setHobi(e.target.value)} />
           </div>
           <div className="px-field">
             <label htmlFor="d-cita">Cita-cita</label>
-            <input id="d-cita" maxLength={100} value={cita} onChange={(e) => setCita(e.target.value)} />
+            <input id="d-cita" required maxLength={100} value={cita} onChange={(e) => setCita(e.target.value)} />
           </div>
         </div>
         <div className="px-field-baris">
           <div className="px-field">
             <label htmlFor="d-ig">Instagram</label>
-            <input id="d-ig" maxLength={120} placeholder="@username" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
+            <input id="d-ig" required={!tanpaIg} disabled={tanpaIg} maxLength={120} placeholder="@username" value={tanpaIg ? "" : instagram} onChange={(e) => setInstagram(e.target.value)} />
+            <label className="px-setuju px-setuju-kecil">
+              <input type="checkbox" checked={tanpaIg} onChange={(e) => { setTanpaIg(e.target.checked); if (e.target.checked) setInstagram(""); }} />
+              <span>Saya tidak punya Instagram</span>
+            </label>
           </div>
           <div className="px-field">
             <label htmlFor="d-tt">TikTok</label>
-            <input id="d-tt" maxLength={120} placeholder="@username" value={tiktok} onChange={(e) => setTiktok(e.target.value)} />
+            <input id="d-tt" required={!tanpaTt} disabled={tanpaTt} maxLength={120} placeholder="@username" value={tanpaTt ? "" : tiktok} onChange={(e) => setTiktok(e.target.value)} />
+            <label className="px-setuju px-setuju-kecil">
+              <input type="checkbox" checked={tanpaTt} onChange={(e) => { setTanpaTt(e.target.checked); if (e.target.checked) setTiktok(""); }} />
+              <span>Saya tidak punya TikTok</span>
+            </label>
           </div>
         </div>
+
+        <fieldset className="px-field px-kader">
+          <legend>Jenjang kaderisasi yang sudah diikuti (wajib pilih)</legend>
+          {JENJANG_KADERISASI.map((j) => (
+            <label className="px-setuju px-setuju-kecil" key={j}>
+              <input
+                type="checkbox"
+                checked={kader.includes(j)}
+                onChange={(e) => {
+                  setKader(e.target.checked ? [...kader, j] : kader.filter((x) => x !== j));
+                  if (e.target.checked) setBelumKader(false);
+                }}
+              />
+              <span>{j}</span>
+            </label>
+          ))}
+          <label className="px-setuju px-setuju-kecil">
+            <input
+              type="checkbox"
+              checked={belumKader}
+              onChange={(e) => {
+                setBelumKader(e.target.checked);
+                if (e.target.checked) setKader([]);
+              }}
+            />
+            <span>Belum pernah mengikuti jenjang apa pun</span>
+          </label>
+          <span className="px-bantu">Pengurus akan memeriksa kebenarannya sebelum menampilkannya di kartu.</span>
+        </fieldset>
 
         <h2 className="px-form-bagian">Izin</h2>
 
@@ -297,7 +348,7 @@ export default function FormDaftar() {
           </span>
         </label>
         <label className="px-setuju">
-          <input type="checkbox" checked={izinMedsos} onChange={(e) => setIzinMedsos(e.target.checked)} disabled={!instagram.trim() && !tiktok.trim()} />
+          <input type="checkbox" checked={izinMedsos} onChange={(e) => setIzinMedsos(e.target.checked)} disabled={(tanpaIg || !instagram.trim()) && (tanpaTt || !tiktok.trim())} />
           <span>Boleh menampilkan Instagram dan TikTok saya di kartu (hanya bisa dicentang kalau diisi).</span>
         </label>
 

@@ -1,5 +1,7 @@
 # Website IPNU IPPNU Ranting Kalimukti
 
+> Ringkasan lengkap proyek untuk melanjutkan di percakapan atau akun lain: lihat `KONTEKS-PROYEK.md`.
+
 Berisi halaman publik (beranda, berita, anggota, transparansi kas, agenda, galeri) dan
 halaman admin di `/admin` (login, berita, agenda, galeri, anggota, kas, iuran, laporan).
 Database dan aturan aksesnya ada di `supabase/schema.sql` dan `supabase/tambahan-admin.sql`.

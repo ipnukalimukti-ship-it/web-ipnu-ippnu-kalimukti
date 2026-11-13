@@ -234,3 +234,191 @@ revoke all on function public.kirim_pendaftaran_lengkap(text, text, text, date, 
 revoke all on function public.lampirkan_foto_pendaftaran(uuid) from public;
 grant execute on function public.kirim_pendaftaran_lengkap(text, text, text, date, text, text, text, text, text, text, text, text, text, text, boolean, boolean, boolean, text) to anon, authenticated;
 grant execute on function public.lampirkan_foto_pendaftaran(uuid) to anon, authenticated;
+
+-- ============================================================
+-- PERUBAHAN LANJUTAN: semua isian wajib, dan jenjang kaderisasi yang sudah diikuti
+-- (bagian ini sudah termasuk di file ini, aman dijalankan ulang)
+--
+--  * Semua isian profil wajib diisi. Instagram dan TikTok boleh diganti dengan
+--    pernyataan "tidak punya akun" supaya yang tidak punya akun tidak terkunci.
+--  * Pendaftar wajib memilih jenjang kaderisasi yang sudah diikuti, atau menyatakan
+--    belum pernah mengikuti jenjang apa pun.
+--  * Foto wajib dipasang di formulir (diperiksa di formulir, karena foto diunggah
+--    sesudah pendaftaran masuk). Pendaftaran tanpa foto tetap tercatat dan ditandai
+--    di menu admin.
+--  * Fungsi lama (tanpa jenjang kaderisasi) sengaja dibiarkan supaya website versi
+--    lama tetap berjalan selama pembaruan dipasang.
+-- ============================================================
+
+alter table public.pendaftaran
+  add column if not exists kaderisasi text[],
+  add column if not exists belum_kaderisasi boolean not null default false;
+
+create or replace function public.kirim_pendaftaran_lengkap(
+  p_nama text,
+  p_jenis text,
+  p_tempat_lahir text,
+  p_tanggal_lahir date,
+  p_no_hp text,
+  p_alamat text,
+  p_sekolah text,
+  p_moto text,
+  p_kesan text,
+  p_pesan text,
+  p_hobi text,
+  p_cita_cita text,
+  p_instagram text,
+  p_tiktok text,
+  p_tanpa_instagram boolean,
+  p_tanpa_tiktok boolean,
+  p_kaderisasi text[],
+  p_belum_kaderisasi boolean,
+  p_izin_profil boolean,
+  p_izin_medsos boolean,
+  p_setuju boolean,
+  p_jebakan text default ''
+) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_nama text := trim(coalesce(p_nama, ''));
+  v_hp text := regexp_replace(coalesce(p_no_hp, ''), '[^0-9+]', '', 'g');
+  v_ig text := nullif(regexp_replace(trim(coalesce(p_instagram, '')), '^@', ''), '');
+  v_tt text := nullif(regexp_replace(trim(coalesce(p_tiktok, '')), '^@', ''), '');
+  v_kader text[];
+  v_id uuid;
+begin
+  -- Isian jebakan untuk robot. Kalau terisi, pura-pura berhasil tanpa menyimpan.
+  if coalesce(p_jebakan, '') <> '' then
+    return gen_random_uuid();
+  end if;
+
+  if p_setuju is not true then
+    raise exception 'Centang persetujuan dulu sebelum mengirim.';
+  end if;
+  if char_length(v_nama) < 3 or char_length(v_nama) > 120 then
+    raise exception 'Nama lengkap harus 3 sampai 120 huruf.';
+  end if;
+  if p_jenis is null or p_jenis not in ('IPNU', 'IPPNU') then
+    raise exception 'Pilih IPNU atau IPPNU.';
+  end if;
+  if p_tanggal_lahir is null
+     or p_tanggal_lahir > current_date - interval '8 years'
+     or p_tanggal_lahir < date '1980-01-01' then
+    raise exception 'Tanggal lahir tidak masuk akal. Periksa lagi.';
+  end if;
+  if char_length(regexp_replace(v_hp, '[^0-9]', '', 'g')) < 8 or char_length(v_hp) > 16 then
+    raise exception 'Nomor HP atau WhatsApp tidak valid.';
+  end if;
+
+  -- Semua isian profil wajib.
+  if char_length(trim(coalesce(p_tempat_lahir, ''))) = 0
+     or char_length(trim(coalesce(p_alamat, ''))) = 0
+     or char_length(trim(coalesce(p_sekolah, ''))) = 0
+     or char_length(trim(coalesce(p_moto, ''))) = 0
+     or char_length(trim(coalesce(p_kesan, ''))) = 0
+     or char_length(trim(coalesce(p_pesan, ''))) = 0
+     or char_length(trim(coalesce(p_hobi, ''))) = 0
+     or char_length(trim(coalesce(p_cita_cita, ''))) = 0 then
+    raise exception 'Semua kolom wajib diisi. Ada yang masih kosong.';
+  end if;
+  if (v_ig is null and p_tanpa_instagram is not true) or (v_tt is null and p_tanpa_tiktok is not true) then
+    raise exception 'Isi Instagram dan TikTok, atau centang "tidak punya".';
+  end if;
+
+  if char_length(p_tempat_lahir) > 80
+     or char_length(p_alamat) > 300
+     or char_length(p_sekolah) > 120 then
+    raise exception 'Tempat lahir, alamat, atau asal sekolah terlalu panjang.';
+  end if;
+  if char_length(p_moto) > 120
+     or char_length(p_kesan) > 300
+     or char_length(p_pesan) > 300
+     or char_length(p_hobi) > 100
+     or char_length(p_cita_cita) > 100 then
+    raise exception 'Moto, kesan, pesan, hobi, atau cita-cita terlalu panjang.';
+  end if;
+  if (v_ig is not null and v_ig !~ '^[A-Za-z0-9._]{1,30}$')
+     or (v_tt is not null and v_tt !~ '^[A-Za-z0-9._]{1,30}$') then
+    raise exception 'Username Instagram atau TikTok tidak valid. Tulis username saja, misalnya @namaanda.';
+  end if;
+
+  -- Jenjang kaderisasi: pilih yang sudah diikuti, atau nyatakan belum pernah.
+  select coalesce(array_agg(j order by j), '{}') into v_kader
+  from (select distinct unnest(coalesce(p_kaderisasi, '{}')) as j) x
+  where j in ('Makesta', 'Lakmud', 'Lakut');
+  if cardinality(v_kader) = 0 and p_belum_kaderisasi is not true then
+    raise exception 'Pilih jenjang kaderisasi yang sudah diikuti, atau centang "belum pernah".';
+  end if;
+  if cardinality(v_kader) > 0 and p_belum_kaderisasi is true then
+    raise exception 'Pilih salah satu: sudah mengikuti jenjang, atau belum pernah.';
+  end if;
+
+  -- Pembatas umum: maksimal 30 pendaftaran per jam.
+  if (select count(*) from public.pendaftaran where created_at > now() - interval '1 hour') >= 30 then
+    raise exception 'Sedang banyak pendaftaran masuk. Coba lagi beberapa saat lagi.';
+  end if;
+
+  if exists (
+    select 1 from public.pendaftaran
+    where status = 'baru' and lower(nama) = lower(v_nama) and tanggal_lahir = p_tanggal_lahir
+  ) then
+    raise exception 'Pendaftaran atas nama ini sudah masuk dan sedang diproses pengurus.';
+  end if;
+
+  insert into public.pendaftaran (
+    nama, jenis, tempat_lahir, tanggal_lahir, no_hp, alamat, sekolah,
+    moto, kesan, pesan, hobi, cita_cita, instagram, tiktok, kaderisasi, belum_kaderisasi,
+    izin_profil, izin_medsos
+  ) values (
+    v_nama, p_jenis, trim(p_tempat_lahir), p_tanggal_lahir, v_hp, trim(p_alamat), trim(p_sekolah),
+    trim(p_moto), trim(p_kesan), trim(p_pesan), trim(p_hobi), trim(p_cita_cita), v_ig, v_tt,
+    nullif(v_kader, '{}'), cardinality(v_kader) = 0,
+    coalesce(p_izin_profil, false), coalesce(p_izin_medsos, false) and (v_ig is not null or v_tt is not null)
+  )
+  returning id into v_id;
+
+  return v_id;
+end;
+$$;
+
+-- Menyetujui: jenjang kaderisasi yang diakui pendaftar ikut tercatat (periksa dulu kebenarannya).
+create or replace function public.setujui_pendaftaran(p_id uuid) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  r public.pendaftaran;
+  v_member uuid;
+begin
+  if not public.punya_peran('sekretaris') then
+    raise exception 'Anda tidak punya izin memproses pendaftaran';
+  end if;
+
+  select * into r from public.pendaftaran where id = p_id for update;
+  if not found then
+    raise exception 'Pendaftaran tidak ditemukan';
+  end if;
+  if r.status <> 'baru' then
+    raise exception 'Pendaftaran ini sudah diproses';
+  end if;
+
+  insert into public.members (
+    nama, jenis, tempat_lahir, tanggal_lahir, no_hp, alamat, sekolah,
+    moto, kesan, pesan, hobi, cita_cita, instagram, tiktok, kaderisasi,
+    tampil_medsos, tampil_publik, aktif, catatan
+  ) values (
+    r.nama, r.jenis, r.tempat_lahir, r.tanggal_lahir, r.no_hp, r.alamat, r.sekolah,
+    r.moto, r.kesan, r.pesan, r.hobi, r.cita_cita, r.instagram, r.tiktok, r.kaderisasi,
+    r.izin_medsos and (r.instagram is not null or r.tiktok is not null), r.izin_profil, true,
+    'Dari pendaftaran online'
+  )
+  returning id into v_member;
+
+  update public.pendaftaran
+  set status = 'disetujui', member_id = v_member, ditangani_oleh = auth.uid(), ditangani_pada = now()
+  where id = p_id;
+
+  return v_member;
+end;
+$$;
+
+revoke all on function public.kirim_pendaftaran_lengkap(text, text, text, date, text, text, text, text, text, text, text, text, text, text, boolean, boolean, text[], boolean, boolean, boolean, boolean, text) from public;
+grant execute on function public.kirim_pendaftaran_lengkap(text, text, text, date, text, text, text, text, text, text, text, text, text, text, boolean, boolean, text[], boolean, boolean, boolean, boolean, text) to anon, authenticated;
